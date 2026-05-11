@@ -135,7 +135,9 @@ export function DemoCompleteScreen() {
                   <div className="flex items-end gap-2 flex-row-reverse">
                     <div className="bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-2xl rounded-tr-sm px-4 py-3 shadow-md max-w-[320px]">
                       <p className="text-[14px] text-white leading-relaxed">
-                        파이썬 기초반 신청이 완료되었습니다. 자세한 안내는 추후 전달드리겠습니다. 😊
+                        안녕하세요, 이은지님!
+                        <br></br>
+                        파이썬 기초반 신청이 완료되었습니다. 자세한 안내는 추후 전달드리겠습니다😊
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-0.5 mb-1">
@@ -187,9 +189,6 @@ export function DemoCompleteScreen() {
               <p className="text-white font-bold text-[17px] mb-1">
                 모든 자동화가 완료되었어요!
               </p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-indigo-200 text-xs">전체 처리</p>
             </div>
           </motion.div>
 
