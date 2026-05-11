@@ -31,7 +31,7 @@ const exampleCards = [
       },
       {
         icon: MessageCircle,
-        label: "확인 메시지 발송",
+        label: "메시지 미리보기 및 승인",
         color: "text-blue-500 bg-blue-50",
       },
     ],

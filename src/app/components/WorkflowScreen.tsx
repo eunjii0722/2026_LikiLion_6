@@ -55,9 +55,9 @@ const workflowSteps = [
     iconColor: "text-purple-600",
     borderColor: "border-purple-200",
     activeBorder: "border-purple-500",
-    title: "확인 메시지 발송",
-    description: "신청자에게 완료 안내 메시지를 보내요",
-    badge: "후속 작업",
+    title: "메시지 미리보기 및 승인",
+    description: "자동 생성된 메시지를 확인하고 승인 후 발송해요",
+    badge: "승인",
     badgeBg: "bg-purple-100 text-purple-700",
   },
 ];
@@ -90,7 +90,7 @@ const stepDetails: Record<
     ],
   },
   4: {
-    title: "확인 메시지 설정",
+    title: "메시지 미리보기 및 승인",
     fields: [
       {
         label: "메시지 내용",
@@ -98,7 +98,7 @@ const stepDetails: Record<
         editable: true,
       },
       { label: "발송 채널", value: "카카오톡 자동응답" },
-      { label: "발송 시점", value: "정보 저장 직후 즉시" },
+      { label: "발송 방식", value: "사용자 승인 후 발송" },
     ],
   },
 };

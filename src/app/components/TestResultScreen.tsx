@@ -50,7 +50,7 @@ const resultSteps = [
     iconColor: "text-purple-600",
     status: "완료",
     statusColor: "text-green-600 bg-green-50",
-    title: "확인 메시지 발송",
+    title: "메시지 미리보기 및 승인",
   },
 ];
 

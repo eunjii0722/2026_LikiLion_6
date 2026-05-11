@@ -65,11 +65,11 @@ const analysisCards = [
     iconColor: "text-purple-600",
     borderColor: "border-purple-200",
     badgeBg: "bg-purple-100 text-purple-700",
-    badge: "후속 작업",
-    title: "확인 메시지 자동 발송",
+    badge: "승인",
+    title: "메시지 미리보기 및 승인",
     description:
-      "저장 완료 후 신청자에게 확인 메시지를 즉시 보내요.",
-    detail: "카카오톡 자동응답 · 저장 직후 즉시",
+      "자동 생성된 메시지를 확인하고 승인 후 발송해요.",
+    detail: "사용자 승인 후 발송",
   },
 ];
 
