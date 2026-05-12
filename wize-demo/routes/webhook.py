@@ -24,3 +24,79 @@ def normalize_row(raw: dict) -> dict:
         normalized_key = COLUMN_MAP.get(k, k.lower().replace(" ", "_"))
         result[normalized_key] = v
     return result
+
+@router.post("/webhook/google")
+async def google_webhook(request: Request):
+    # Google이 token 헤더로 workflow_id를 전달
+    workflow_id = request.headers.get("X-Goog-Channel-Token")
+    if not workflow_id:
+        return {"ok": True}
+
+    with db.get_conn() as conn:
+        workflow = conn.execute(
+            "SELECT * FROM workflows WHERE id = ? AND is_active = 1",
+            (workflow_id,),
+        ).fetchone()
+        if not workflow:
+            return {"ok": True}
+        steps = conn.execute(
+            "SELECT * FROM workflow_step WHERE workflow_id = ? ORDER BY step_order",
+            (workflow_id,),
+        ).fetchall()
+
+    trigger_step = next((s for s in steps if s["step_type"] == "trigger"), None)
+    if not trigger_step:
+        return {"ok": True}
+
+    trigger_config = json.loads(trigger_step["config"])
+    linked_sheet_id = trigger_config.get("linked_sheet_id")
+
+    raw_data = google_sheets.get_last_row(linked_sheet_id)
+    data = normalize_row(raw_data)
+
+    run_id = str(uuid.uuid4())
+    with db.get_conn() as conn:
+        conn.execute(
+            "INSERT INTO execution_runs (id, workflow_id, status, started_at) VALUES (?, ?, 'running', datetime('now'))",
+            (run_id, workflow_id),
+        )
+
+    errors = []
+    for step in steps:
+        if step["step_type"] == "trigger":
+            continue
+
+        config = json.loads(step["config"])
+        step_status = "success"
+        error_msg = None
+
+        try:
+            if step["service"] == "google_sheets":
+                row = [fill_template(cell, data) for cell in config["row_template"]]
+                google_sheets.append_row(config["sheet_id"], config["sheet_name"], row)
+
+            elif step["service"] == "gmail":
+                to = fill_template(config["to"], data)
+                subject = fill_template(config["subject"], data)
+                body = fill_template(config["body"], data)
+                gmail.send_email(to, subject, body)
+
+        except Exception as e:
+            step_status = "fail"
+            error_msg = str(e)
+            errors.append(error_msg)
+
+        with db.get_conn() as conn:
+            conn.execute(
+                "INSERT INTO step_logs (id, workflow_id, run_id, step_id, status, error_log, executed_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+                (str(uuid.uuid4()), workflow_id, run_id, step["id"], step_status, error_msg),
+            )
+
+    final_status = "fail" if errors else "success"
+    with db.get_conn() as conn:
+        conn.execute(
+            "UPDATE execution_runs SET status = ? WHERE id = ?",
+            (final_status, run_id),
+        )
+
+    return {"ok": True}
