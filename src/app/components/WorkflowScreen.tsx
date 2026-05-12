@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useLocation } from "react-router";
+import { createWorkflow } from "../../api";
+import type { WorkflowDraft } from "../../api";
 import {
   MessageCircle,
   Brain,
@@ -105,10 +108,30 @@ const stepDetails: Record<
 
 export function WorkflowScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const stateWorkflow = location.state?.workflow as WorkflowDraft | undefined;
+  const inputText = (location.state?.inputText as string) ?? "";
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [selectedStep, setSelectedStep] = useState(2);
   const [editingField, setEditingField] = useState<number | null>(null);
 
   const detail = stepDetails[selectedStep];
+
+  const handleRun = async () => {
+    if (!stateWorkflow) return;
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      const { workflow_id } = await createWorkflow(inputText, stateWorkflow.actions);
+      localStorage.setItem("workflow_id", workflow_id);
+      navigate("/demo");
+    } catch {
+      setSubmitError("워크플로우 등록 중 오류가 발생했어요. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="max-w-[1200px] mx-auto px-8 py-12">
@@ -257,12 +280,25 @@ export function WorkflowScreen() {
 
             {/* Panel Footer */}
             <div className="px-6 pb-6">
+              {submitError && (
+                <p className="text-xs text-red-500 mb-3 text-center">{submitError}</p>
+              )}
               <button
-                onClick={() => navigate("/result")}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-[15px] font-semibold hover:opacity-90 transition-all shadow-md shadow-indigo-200"
+                onClick={handleRun}
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-[15px] font-semibold hover:opacity-90 transition-all shadow-md shadow-indigo-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Play className="w-4 h-4 fill-white" />
-                테스트 실행하기
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    등록 중...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-white" />
+                    자동화 시작하기
+                  </>
+                )}
               </button>
             </div>
           </div>
