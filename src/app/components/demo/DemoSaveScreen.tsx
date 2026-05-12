@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import {
-  MessageCircle,
+  FileText,
   Brain,
   FileSpreadsheet,
-  Send,
+  Mail,
   ArrowRight,
   CheckCircle,
   ExternalLink,
@@ -17,10 +17,10 @@ const existingRows = [
 ];
 
 const flowSteps = [
-  { icon: MessageCircle, label: "카카오톡 메시지 도착", done: true, active: false },
-  { icon: Brain, label: "AI 정보 추출", done: true, active: false },
-  { icon: FileSpreadsheet, label: "구글시트 저장", done: true, active: false },
-  { icon: Send, label: "메시지 미리보기 및 승인", done: false, active: true },
+  { icon: FileText, label: "구글 폼 응답 감지", done: true, active: false },
+  { icon: Brain, label: "데이터 추출", done: true, active: false },
+  { icon: FileSpreadsheet, label: "구글시트 저장", done: true, active: true },
+  { icon: Mail, label: "Gmail 발송", done: false, active: false },
 ];
 
 export function DemoSaveScreen() {
@@ -39,13 +39,13 @@ export function DemoSaveScreen() {
           <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
             <FileSpreadsheet className="w-3.5 h-3.5 text-green-600" />
           </div>
-          <span className="text-sm font-semibold text-green-600">미리보기 및 승인</span>
+          <span className="text-sm font-semibold text-green-600">구글시트 저장 완료</span>
         </div>
         <h1 className="text-[40px] font-bold text-gray-900 mb-3" style={{ letterSpacing: "-0.8px" }}>
-          발송할 메시지를 확인하고 승인해주세요
+          구글시트에 자동 저장됐어요
         </h1>
         <p className="text-[16px] text-gray-500">
-          저장된 신청 정보와 함께 자동 생성된 확인 메시지를 미리보고, 승인하면 발송됩니다.
+          폼 응답 데이터가 지정한 시트에 새 행으로 추가됐어요.
         </p>
       </motion.div>
 
@@ -143,7 +143,7 @@ export function DemoSaveScreen() {
               <div className="px-4 py-3.5 text-sm font-bold text-green-800 border-r border-green-200">이은지</div>
               <div className="px-4 py-3.5 text-sm font-bold text-green-800 border-r border-green-200">010-1234-5678</div>
               <div className="px-4 py-3.5 text-sm font-bold text-green-800 border-r border-green-200">파이썬 기초반</div>
-              <div className="px-4 py-3.5 text-sm font-bold text-green-800 border-r border-green-200">2026.05.08 14:30</div>
+              <div className="px-4 py-3.5 text-sm font-bold text-green-800 border-r border-green-200">2026.05.13 09:30</div>
               <div className="px-4 py-3.5">
                 <span className="text-xs font-bold text-green-700 bg-green-200 px-2 py-0.5 rounded-full">
                   저장 완료
@@ -160,44 +160,18 @@ export function DemoSaveScreen() {
             </div>
           </motion.div>
 
-          {/* Message preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65 }}
-            className="bg-white rounded-2xl border border-gray-200 p-5 mb-6 shadow-sm"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">확인 메시지 미리보기</p>
-                <p className="text-sm font-bold text-gray-900">학생에게 발송될 안내 메시지</p>
-              </div>
-              <span className="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full">자동 생성</span>
-            </div>
-            <div className="bg-[#F8FAFC] rounded-2xl border border-gray-100 p-5 mb-4">
-              <p className="text-sm text-gray-600 mb-2">안녕하세요, 이은지님!</p>
-              <p className="text-base text-gray-900 leading-relaxed">
-                파이썬 기초반 신청이 완료되었습니다. 자세한 안내는 추후 전달드리겠습니다😊
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="inline-flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">승인 전 표시</span>
-              <span>사용자가 확인 후 발송됩니다.</span>
-            </div>
-          </motion.div>
-
           {/* Save confirmation banner */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.85 }}
+            transition={{ delay: 0.75 }}
             className="flex items-center gap-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6"
           >
             <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center flex-shrink-0">
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-green-700 mb-1">4행에 신청 정보가 저장되었어요</p>
+              <p className="text-sm font-bold text-green-700 mb-1">4행에 폼 응답 데이터가 저장되었어요</p>
             </div>
           </motion.div>
 
@@ -205,11 +179,11 @@ export function DemoSaveScreen() {
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
+            transition={{ delay: 0.85 }}
             onClick={() => navigate("/demo/complete")}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-[15px] font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-200"
           >
-            승인 후 발송하기
+            Gmail 발송 확인하기
             <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>
@@ -269,7 +243,7 @@ export function DemoSaveScreen() {
               {[
                 { label: "저장 위치", value: "수강신청 명단" },
                 { label: "추가된 행", value: "4행 (새로 추가)" },
-                { label: "저장 시간", value: "2026.05.08 14:30:01" },
+                { label: "저장 시간", value: "2026.05.13 09:30:01" },
                 { label: "처리 상태", value: "저장 완료" },
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between">

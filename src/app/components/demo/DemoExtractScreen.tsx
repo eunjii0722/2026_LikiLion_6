@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import {
-  MessageCircle,
+  FileText,
   Brain,
   FileSpreadsheet,
-  Send,
+  Mail,
   ArrowRight,
   CheckCircle,
   Sparkles,
@@ -15,7 +15,6 @@ const extractedFields = [
     icon: "👤",
     label: "이름",
     value: "이은지",
-    from: "이은지 / 010-...",
     bg: "bg-blue-50",
     border: "border-blue-100",
     textColor: "text-blue-800",
@@ -25,17 +24,24 @@ const extractedFields = [
     icon: "📱",
     label: "연락처",
     value: "010-1234-5678",
-    from: "/ 010-1234-5678 /",
     bg: "bg-indigo-50",
     border: "border-indigo-100",
     textColor: "text-indigo-800",
     labelColor: "text-indigo-500",
   },
   {
+    icon: "📧",
+    label: "이메일",
+    value: "eunji@example.com",
+    bg: "bg-sky-50",
+    border: "border-sky-100",
+    textColor: "text-sky-800",
+    labelColor: "text-sky-500",
+  },
+  {
     icon: "📚",
-    label: "신청 수업",
+    label: "수강과목",
     value: "파이썬 기초반",
-    from: "/ 파이썬 기초반 신청...",
     bg: "bg-purple-50",
     border: "border-purple-100",
     textColor: "text-purple-800",
@@ -43,9 +49,8 @@ const extractedFields = [
   },
   {
     icon: "🕐",
-    label: "신청 시간",
-    value: "2026.05.08 14:30",
-    from: "메시지 수신 시각",
+    label: "제출시간",
+    value: "2026.05.13 09:30",
     bg: "bg-violet-50",
     border: "border-violet-100",
     textColor: "text-violet-800",
@@ -55,8 +60,8 @@ const extractedFields = [
 
 const flowSteps = [
   {
-    icon: MessageCircle,
-    label: "카카오톡 메시지 도착",
+    icon: FileText,
+    label: "구글 폼 응답 감지",
     badge: "완료",
     color: "bg-yellow-50 text-yellow-500",
     badgeBg: "bg-green-100 text-green-600",
@@ -65,7 +70,7 @@ const flowSteps = [
   },
   {
     icon: Brain,
-    label: "AI 정보 추출",
+    label: "데이터 추출",
     badge: "진행 중",
     color: "bg-blue-50 text-blue-500",
     badgeBg: "bg-blue-100 text-blue-700",
@@ -82,8 +87,8 @@ const flowSteps = [
     done: false,
   },
   {
-    icon: Send,
-    label: "확인 메시지 발송",
+    icon: Mail,
+    label: "Gmail 발송",
     badge: "대기 중",
     color: "bg-purple-50 text-purple-500",
     badgeBg: "bg-gray-100 text-gray-400",
@@ -108,34 +113,34 @@ export function DemoExtractScreen() {
           <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
             <Brain className="w-3.5 h-3.5 text-blue-500" />
           </div>
-          <span className="text-sm font-semibold text-blue-600">AI 정보 추출 완료</span>
+          <span className="text-sm font-semibold text-blue-600">🧠 데이터 추출 완료</span>
         </div>
         <h1 className="text-[40px] font-bold text-gray-900 mb-3" style={{ letterSpacing: "-0.8px" }}>
-          AI가 신청 정보를 추출했어요
+          폼 응답 데이터를 추출했어요
         </h1>
       </motion.div>
 
       <div className="grid grid-cols-[1fr_320px] gap-8">
         {/* Left: Extracted Info */}
         <div>
-          {/* Original Message */}
+          {/* Original Form Response */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.05 }}
-            className="bg-[#FFF9E6] rounded-2xl border border-yellow-200 p-5 mb-6 flex items-start gap-4"
+            className="bg-[#F0FDF4] rounded-2xl border border-green-200 p-5 mb-6 flex items-start gap-4"
           >
-            <div className="w-10 h-10 rounded-xl bg-yellow-300 flex items-center justify-center font-bold text-[#3C1E1E] flex-shrink-0">
-              이
+            <div className="w-10 h-10 rounded-xl bg-green-200 flex items-center justify-center flex-shrink-0 text-lg">
+              📋
             </div>
             <div>
-              <p className="text-xs font-semibold text-yellow-700 mb-1">원본 카카오톡 메시지</p>
-              <div className="bg-white rounded-xl rounded-tl-sm px-4 py-3 shadow-sm border border-yellow-100 inline-block">
+              <p className="text-xs font-semibold text-green-700 mb-1">원본 폼 응답</p>
+              <div className="bg-white rounded-xl px-4 py-3 shadow-sm border border-green-100 inline-block">
                 <p className="text-[15px] text-gray-800">
-                  이은지 / 010-1234-5678 / 파이썬 기초반 신청합니다.
+                  이은지 / 010-1234-5678 / eunji@example.com / 파이썬 기초반
                 </p>
               </div>
-              <p className="text-xs text-gray-400 mt-1.5">2026.05.08 오후 2:30</p>
+              <p className="text-xs text-gray-400 mt-1.5">2026.05.13 오전 9:30 제출</p>
             </div>
           </motion.div>
 
@@ -155,7 +160,7 @@ export function DemoExtractScreen() {
           </motion.div>
 
           {/* Extracted Fields Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-6">
             {extractedFields.map((field, idx) => (
               <motion.div
                 key={idx}
@@ -170,13 +175,9 @@ export function DemoExtractScreen() {
                     {field.label}
                   </span>
                 </div>
-                <p className={`text-[20px] font-bold ${field.textColor} mb-2`}>
+                <p className={`text-[16px] font-bold ${field.textColor} mb-1 break-all`}>
                   {field.value}
                 </p>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1 h-1 rounded-full bg-gray-300" />
-                  <p className="text-xs text-gray-400">원문: "{field.from}"</p>
-                </div>
               </motion.div>
             ))}
           </div>
@@ -185,7 +186,7 @@ export function DemoExtractScreen() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            transition={{ delay: 0.8 }}
             className="flex items-center gap-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 mb-6"
           >
             <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -193,7 +194,7 @@ export function DemoExtractScreen() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold text-green-700 mb-1">
-                4가지 정보를 모두 정확하게 추출했어요
+                5가지 정보를 모두 정확하게 추출했어요
               </p>
               <p className="text-xs text-green-600">
                 누락된 항목이나 오류 없이 모든 신청 정보를 읽어냈어요.
@@ -205,7 +206,7 @@ export function DemoExtractScreen() {
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
+            transition={{ delay: 0.9 }}
             onClick={() => navigate("/demo/save")}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-[15px] font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-200"
           >
@@ -256,7 +257,7 @@ export function DemoExtractScreen() {
             <div className="mt-5 pt-5 border-t border-gray-100">
               <p className="text-xs text-gray-400 mb-3">추출 완료된 정보</p>
               <div className="space-y-2">
-                {["이름: 이은지", "연락처: 010-1234-5678", "수업: 파이썬 기초반", "시간: 2026.05.08 14:30"].map((item, idx) => (
+                {["이름: 이은지", "연락처: 010-1234-5678", "이메일: eunji@example.com", "수업: 파이썬 기초반", "시간: 2026.05.13 09:30"].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <CheckCircle className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                     <span className="text-xs text-gray-600">{item}</span>

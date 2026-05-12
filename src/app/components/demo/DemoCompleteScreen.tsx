@@ -1,31 +1,28 @@
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import {
-  MessageCircle,
+  FileText,
   Brain,
   FileSpreadsheet,
-  Send,
+  Mail,
   CheckCircle,
-  Clock,
-  MapPin,
   Zap,
   RotateCcw,
-  BarChart2,
   PartyPopper,
 } from "lucide-react";
 
 const flowSteps = [
-  { icon: MessageCircle, label: "카카오톡 메시지 도착", done: true },
-  { icon: Brain, label: "AI 정보 추출", done: true },
+  { icon: FileText, label: "구글 폼 응답 감지", done: true },
+  { icon: Brain, label: "데이터 추출", done: true },
   { icon: FileSpreadsheet, label: "구글시트 저장", done: true },
-  { icon: Send, label: "확인 메시지 발송", done: true },
+  { icon: Mail, label: "Gmail 발송", done: true },
 ];
 
 const summaryItems = [
   {
-    icon: MapPin,
+    icon: FileSpreadsheet,
     label: "저장 위치",
-    value: "수강신청 명단",
+    value: "저장 완료",
     sub: "Google Sheets",
     bg: "bg-green-50",
     iconColor: "text-green-600",
@@ -33,10 +30,10 @@ const summaryItems = [
     valueColor: "text-green-700",
   },
   {
-    icon: Send,
+    icon: Mail,
     label: "발송 상태",
-    value: "완료",
-    sub: "카카오톡 자동응답",
+    value: "발송 완료",
+    sub: "Gmail 자동발송",
     bg: "bg-purple-50",
     iconColor: "text-purple-600",
     iconBg: "bg-purple-100",
@@ -63,91 +60,85 @@ export function DemoCompleteScreen() {
           <span className="text-sm font-semibold text-[#6366F1]">자동화 실행 완료</span>
         </div>
         <h1 className="text-[40px] font-bold text-gray-900 mb-3" style={{ letterSpacing: "-0.8px" }}>
-          확인 메시지 발송까지 완료했어요! 🎉
+          Gmail 발송까지 완료했어요! 🎉
         </h1>
         <p className="text-[16px] text-gray-500">
-          신청자에게 카카오톡 확인 메시지를 자동으로 보냈어요.
+          신청자에게 확인 이메일을 자동으로 발송했어요.
         </p>
       </motion.div>
 
       <div className="grid grid-cols-[1fr_320px] gap-8">
         {/* Left */}
         <div>
-          {/* Sent Message Preview */}
+          {/* Gmail Email Preview */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.05 }}
-            className="bg-[#B2C7DA] rounded-2xl overflow-hidden shadow-xl mb-6"
+            className="bg-white rounded-2xl border border-gray-200 shadow-xl mb-6 overflow-hidden"
           >
-            {/* Chat Header */}
-            <div className="bg-[#3C1E1E] px-5 py-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold text-[#3C1E1E]">
-                이
+            {/* Gmail-style header bar */}
+            <div className="bg-[#F6F8FC] border-b border-gray-200 px-5 py-3 flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-400" />
+                <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                <div className="w-3 h-3 rounded-full bg-green-400" />
               </div>
-              <div>
-                <p className="text-white text-sm font-bold">이은지</p>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                  <p className="text-green-400 text-xs">자동 응답 완료</p>
+              <div className="flex-1 mx-4 bg-white rounded-full px-4 py-1.5 text-xs text-gray-400 border border-gray-200">
+                Gmail — 받은편지함
+              </div>
+            </div>
+
+            {/* Email header */}
+            <div className="px-6 py-5 border-b border-gray-100">
+              <h2 className="text-[17px] font-bold text-gray-900 mb-4">
+                [WIZE] 수강 신청이 완료되었습니다
+              </h2>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <span className="text-white text-sm font-bold">W</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <p className="text-sm font-bold text-gray-900">WIZE 자동화 &lt;noreply@wize-demo.com&gt;</p>
+                    <span className="text-xs text-gray-400">2026.05.13 09:30</span>
+                  </div>
+                  <p className="text-xs text-gray-500">받는사람: eunji@example.com</p>
                 </div>
               </div>
             </div>
 
-            {/* Messages */}
-            <div className="p-5 space-y-4 bg-[#B2C7DA]">
-              <div className="flex items-center justify-center">
-                <span className="bg-[#9BB2C4] text-[#4A5568] text-xs px-3 py-1 rounded-full">
-                  2026년 5월 8일 목요일
-                </span>
+            {/* Email body */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="px-6 py-5"
+            >
+              <p className="text-[15px] text-gray-800 mb-4">안녕하세요, 이은지님! 👋</p>
+              <p className="text-[15px] text-gray-800 mb-6">
+                파이썬 기초반 수강 신청이 완료되었습니다.
+              </p>
+
+              <div className="bg-[#F6F8FC] rounded-xl p-4 mb-6 border border-gray-100">
+                <p className="text-sm font-bold text-gray-700 mb-3">📋 신청 정보</p>
+                <div className="space-y-1.5">
+                  {[
+                    { label: "이름", value: "이은지" },
+                    { label: "수강과목", value: "파이썬 기초반" },
+                    { label: "신청일시", value: "2026.05.13 09:30" },
+                  ].map((row, idx) => (
+                    <p key={idx} className="text-sm text-gray-600">
+                      - {row.label}: <span className="font-semibold text-gray-800">{row.value}</span>
+                    </p>
+                  ))}
+                </div>
               </div>
 
-              {/* Incoming message */}
-              <div className="flex items-end gap-2">
-                <div className="w-9 h-9 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold text-[#3C1E1E] flex-shrink-0 mb-4">
-                  이
-                </div>
-                <div>
-                  <p className="text-xs text-[#4A6078] mb-1 ml-1 font-medium">이은지</p>
-                  <div className="flex items-end gap-2">
-                    <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[280px]">
-                      <p className="text-[14px] text-gray-800">
-                        이은지 / 010-1234-5678 / 파이썬 기초반 신청합니다.
-                      </p>
-                    </div>
-                    <span className="text-xs text-[#4A6078] flex-shrink-0 mb-1">오후 2:30</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sent message (from FlowTalk bot) */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4, duration: 0.4 }}
-                className="flex items-end gap-2 flex-row-reverse"
-              >
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center flex-shrink-0 mb-4 shadow-sm">
-                  <Zap className="w-4 h-4 text-white fill-white" />
-                </div>
-                <div className="flex flex-col items-end">
-                  <p className="text-xs text-[#4A6078] mb-1 mr-1 font-medium">FlowTalk 자동응답</p>
-                  <div className="flex items-end gap-2 flex-row-reverse">
-                    <div className="bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-2xl rounded-tr-sm px-4 py-3 shadow-md max-w-[320px]">
-                      <p className="text-[14px] text-white leading-relaxed">
-                        안녕하세요, 이은지님!
-                        <br></br>
-                        파이썬 기초반 신청이 완료되었습니다. 자세한 안내는 추후 전달드리겠습니다😊
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-0.5 mb-1">
-                      <CheckCircle className="w-3 h-3 text-blue-400" />
-                      <span className="text-xs text-[#4A6078]">오후 2:30</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+              <p className="text-[15px] text-gray-800 mb-1">자세한 안내는 추후 전달드리겠습니다.</p>
+              <p className="text-[15px] text-gray-800 mb-5">감사합니다 😊</p>
+              <p className="text-sm text-gray-500 font-medium">WIZE 자동화팀</p>
+            </motion.div>
           </motion.div>
 
           {/* Summary Cards */}
@@ -207,13 +198,6 @@ export function DemoCompleteScreen() {
               처음부터 다시 보기
             </button>
             <button
-              onClick={() => navigate("/demo")}
-              className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-[#6366F1]/30 text-[#6366F1] bg-[#F0F0FF] font-medium hover:bg-[#E8E8FF] transition-all"
-            >
-              <BarChart2 className="w-4 h-4" />
-              실행 기록 보기
-            </button>
-            <button
               onClick={() => navigate("/input")}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-200"
             >
@@ -248,6 +232,7 @@ export function DemoCompleteScreen() {
                       <p className="text-sm font-semibold text-gray-800">{step.label}</p>
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full mt-0.5 inline-flex items-center gap-1 bg-green-100 text-green-600">
                         <CheckCircle className="w-3 h-3" />
+                        완료
                       </span>
                     </div>
                   </motion.div>

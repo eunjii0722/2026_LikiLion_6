@@ -4,20 +4,20 @@ import { motion } from "motion/react";
 import { getWorkflowLogs } from "../../../api";
 import {
   Zap,
-  MessageCircle,
+  FileText,
   Brain,
   FileSpreadsheet,
-  Send,
+  Mail,
   Play,
   Clock,
   CheckCircle,
 } from "lucide-react";
 
 const flowSteps = [
-  { icon: MessageCircle, label: "카카오톡 신청", color: "bg-yellow-50 text-yellow-500", border: "border-yellow-200" },
-  { icon: Brain, label: "AI 정보 추출", color: "bg-blue-50 text-blue-500", border: "border-blue-200" },
+  { icon: FileText, label: "구글 폼 응답", color: "bg-yellow-50 text-yellow-500", border: "border-yellow-200" },
+  { icon: Brain, label: "데이터 추출", color: "bg-blue-50 text-blue-500", border: "border-blue-200" },
   { icon: FileSpreadsheet, label: "구글시트 저장", color: "bg-green-50 text-green-600", border: "border-green-200" },
-  { icon: Send, label: "확인 메시지 발송", color: "bg-purple-50 text-purple-600", border: "border-purple-200" },
+  { icon: Mail, label: "Gmail 발송", color: "bg-purple-50 text-purple-600", border: "border-purple-200" },
 ];
 
 const recentLogs = [
@@ -71,10 +71,10 @@ export function DemoStandbyScreen() {
           <span className="text-sm font-semibold text-green-600">자동화 실행 중</span>
         </div>
         <h1 className="text-[40px] font-bold text-gray-900 mb-3" style={{ letterSpacing: "-0.8px" }}>
-          수강 신청 자동화가 켜져 있어요
+          구글 폼 자동화가 켜져 있어요
         </h1>
         <p className="text-[16px] text-gray-500 leading-relaxed">
-          카카오톡 채널에 새 신청 메시지가 도착하면 AI가 자동으로 정보를 정리합니다.
+          구글 폼에 새 응답이 들어오면 자동으로 시트에 저장하고 Gmail을 발송합니다.
         </p>
       </motion.div>
 
@@ -94,7 +94,7 @@ export function DemoStandbyScreen() {
                   <Zap className="w-7 h-7 text-white fill-white" />
                 </div>
                 <div>
-                  <h2 className="text-[20px] font-bold text-gray-900 mb-1">수강 신청 자동 정리</h2>
+                  <h2 className="text-[20px] font-bold text-gray-900 mb-1">폼 응답 자동 처리</h2>
                   <p className="text-sm text-gray-400">2026년 5월 1일부터 실행 중</p>
                 </div>
               </div>
@@ -144,7 +144,7 @@ export function DemoStandbyScreen() {
                 ))}
               </div>
               <p className="text-sm text-[#6366F1] font-medium">
-                카카오톡 채널을 실시간으로 모니터링하고 있어요...
+                구글 폼을 실시간으로 모니터링하고 있어요...
               </p>
             </div>
             {pollError && (
@@ -160,7 +160,7 @@ export function DemoStandbyScreen() {
             className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-[17px] font-bold hover:opacity-90 transition-all shadow-xl shadow-indigo-200 hover:-translate-y-0.5 hover:shadow-indigo-300"
           >
             <Play className="w-5 h-5 fill-white" />
-            카카오톡 신청 메시지 도착 시뮬레이션
+            구글 폼 응답 도착 시뮬레이션
           </button>
           <p className="text-center text-xs text-gray-400 mt-3">
             버튼을 누르면 실제 자동화가 실행되는 모습을 단계별로 확인할 수 있어요.
@@ -207,7 +207,7 @@ export function DemoStandbyScreen() {
             <div className="text-2xl mb-3">💡</div>
             <h3 className="text-[15px] font-bold mb-2">자동화가 실행되는 동안</h3>
             <p className="text-indigo-200 text-sm leading-relaxed">
-              사람이 직접 확인하거나 입력할 필요가 없어요. 메시지가 오면 AI가 자동으로 모든 걸 처리해드려요.
+              사람이 직접 확인하거나 입력할 필요가 없어요. 폼 응답이 오면 AI가 자동으로 모든 걸 처리해드려요.
             </p>
           </div>
         </motion.div>
