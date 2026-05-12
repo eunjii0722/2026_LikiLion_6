@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Sparkles, ArrowRight, Lightbulb } from "lucide-react";
+import { parseText } from "../../api";
 
 const suggestions = [
   {
@@ -21,18 +22,23 @@ export function InputScreen() {
   const navigate = useNavigate();
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSuggestion = (text: string) => {
     setInputText(text);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!inputText.trim()) return;
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const { workflow } = await parseText(inputText);
+      navigate("/analysis", { state: { workflow, inputText } });
+    } catch {
+      setError("분석 중 오류가 발생했어요. 다시 시도해주세요.");
+    } finally {
       setIsLoading(false);
-      navigate("/analysis");
-    }, 2000);
+    }
   };
 
   return (
@@ -53,11 +59,17 @@ export function InputScreen() {
         </p>
       </div>
 
+      {error && (
+        <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-6">
         <textarea
           value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
+          onChange={(e) => { setInputText(e.target.value); setError(""); }}
           placeholder="카카오톡으로 수강 신청이 오면 이름, 연락처, 신청 수업을 구글시트에 정리하고 신청자에게 확인 메시지를 보내줘."
           className="w-full p-6 text-[16px] text-gray-700 placeholder-gray-300 resize-none outline-none bg-transparent leading-relaxed"
           rows={6}
