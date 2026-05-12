@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from models import CreateWorkflowRequest
 import uuid, json
 import db
@@ -52,6 +52,8 @@ def get_workflow(workflow_id: str):
             "SELECT * FROM execution_runs WHERE workflow_id = ? ORDER BY started_at DESC LIMIT 5",
             (workflow_id,),
         ).fetchall()
+    if not workflow:
+        raise HTTPException(status_code=404, detail="Workflow not found")
     return {"workflow": dict(workflow), "logs": [dict(l) for l in logs]}
 
 @router.get("/workflows/{workflow_id}/logs")
