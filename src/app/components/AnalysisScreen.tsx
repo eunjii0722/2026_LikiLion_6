@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
+import type { WorkflowDraft } from "../../api";
 import {
   MessageCircle,
   Database,
@@ -18,63 +19,60 @@ const analysisSteps = [
   { label: "분석 완료!", duration: 0 },
 ];
 
-const analysisCards = [
-  {
-    id: 1,
-    icon: MessageCircle,
-    iconBg: "bg-yellow-50",
-    iconColor: "text-yellow-500",
-    borderColor: "border-yellow-200",
-    badgeBg: "bg-yellow-100 text-yellow-700",
-    badge: "시작 조건",
-    title: "카카오톡 메시지 도착",
-    description:
-      "카카오톡 채널에 새 메시지가 올 때마다 자동화가 시작돼요.",
-    detail: "카카오톡 비즈니스 채널 · 실시간 감지",
-  },
-  {
-    id: 2,
-    icon: FileText,
-    iconBg: "bg-blue-50",
-    iconColor: "text-blue-500",
-    borderColor: "border-blue-200",
-    badgeBg: "bg-blue-100 text-blue-700",
-    badge: "가져올 정보",
-    title: "신청 내용 자동 추출",
-    description:
-      "AI가 메시지에서 이름, 연락처, 신청 수업을 자동으로 읽어요.",
-    detail: "이름 · 연락처 · 신청 수업명 · 신청 시간",
-  },
-  {
-    id: 3,
-    icon: Database,
-    iconBg: "bg-green-50",
-    iconColor: "text-green-600",
-    borderColor: "border-green-200",
-    badgeBg: "bg-green-100 text-green-700",
-    badge: "저장 위치",
-    title: "구글시트에 자동 저장",
-    description:
-      "추출된 정보가 지정한 구글시트에 한 줄씩 추가돼요.",
-    detail: "수강신청 명단 시트 · 새 행 추가",
-  },
-  {
-    id: 4,
-    icon: Send,
-    iconBg: "bg-purple-50",
-    iconColor: "text-purple-600",
-    borderColor: "border-purple-200",
-    badgeBg: "bg-purple-100 text-purple-700",
-    badge: "승인",
-    title: "메시지 미리보기 및 승인",
-    description:
-      "자동 생성된 메시지를 확인하고 승인 후 발송해요.",
-    detail: "사용자 승인 후 발송",
-  },
-];
-
 export function AnalysisScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const stateWorkflow = location.state?.workflow as WorkflowDraft | undefined;
+  const inputText = location.state?.inputText as string | undefined;
+
+  useEffect(() => {
+    if (!stateWorkflow) navigate("/input", { replace: true });
+  }, [stateWorkflow, navigate]);
+
+  const analysisCards = stateWorkflow
+    ? [
+        {
+          id: 1,
+          icon: FileText,
+          iconBg: "bg-yellow-50",
+          iconColor: "text-yellow-500",
+          borderColor: "border-yellow-200",
+          badgeBg: "bg-yellow-100 text-yellow-700",
+          badge: "시작 조건",
+          title: "구글 폼 응답 감지",
+          description: "구글 폼에 새 응답이 들어오면 자동화가 시작돼요.",
+          detail: "Google Form 연동 완료",
+        },
+        ...stateWorkflow.actions.map((action, i) => {
+          if (action.service === "google_sheets") {
+            return {
+              id: i + 2,
+              icon: Database,
+              iconBg: "bg-green-50",
+              iconColor: "text-green-600",
+              borderColor: "border-green-200",
+              badgeBg: "bg-green-100 text-green-700",
+              badge: "저장",
+              title: "구글시트에 자동 저장",
+              description: "응답 데이터가 지정한 구글시트에 한 줄씩 추가돼요.",
+              detail: "Google Sheets 연동 완료",
+            };
+          }
+          return {
+            id: i + 2,
+            icon: Send,
+            iconBg: "bg-purple-50",
+            iconColor: "text-purple-600",
+            borderColor: "border-purple-200",
+            badgeBg: "bg-purple-100 text-purple-700",
+            badge: "발송",
+            title: "Gmail 자동 발송",
+            description: "신청자에게 확인 메일을 자동으로 발송해요.",
+            detail: "Gmail 연동 완료",
+          };
+        }),
+      ]
+    : [];
   const [stepIndex, setStepIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);
   const [visibleCards, setVisibleCards] = useState<number[]>(
@@ -179,9 +177,7 @@ export function AnalysisScreen() {
             입력한 내용
           </p>
           <p className="text-sm text-gray-700 leading-relaxed">
-            "카카오톡으로 수강 신청이 오면 이름, 연락처, 신청
-            수업을 구글시트에 정리하고 신청자에게 확인 메시지를
-            보내줘."
+            "{inputText}"
           </p>
         </div>
       </div>
@@ -282,7 +278,7 @@ export function AnalysisScreen() {
           다시 입력하기
         </button>
         <button
-          onClick={() => navigate("/workflow")}
+          onClick={() => navigate("/workflow", { state: { workflow: stateWorkflow, inputText } })}
           disabled={!isDone}
           className={`flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all ${
             isDone
