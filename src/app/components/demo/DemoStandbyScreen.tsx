@@ -1,5 +1,7 @@
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
+import { getWorkflowLogs } from "../../../api";
 import {
   Zap,
   MessageCircle,
@@ -26,6 +28,34 @@ const recentLogs = [
 
 export function DemoStandbyScreen() {
   const navigate = useNavigate();
+  const [pollError, setPollError] = useState(false);
+  const initialLogCount = useRef<number | null>(null);
+
+  useEffect(() => {
+    const workflowId = localStorage.getItem("workflow_id");
+    if (!workflowId) {
+      navigate("/workflow", { replace: true });
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const { logs } = await getWorkflowLogs(workflowId);
+        if (initialLogCount.current === null) {
+          initialLogCount.current = logs.length;
+          return;
+        }
+        if (logs.length > initialLogCount.current) {
+          clearInterval(interval);
+          navigate("/demo/message");
+        }
+      } catch {
+        setPollError(true);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [navigate]);
 
   return (
     <div className="max-w-[1100px] mx-auto px-8 py-14">
@@ -117,6 +147,11 @@ export function DemoStandbyScreen() {
                 카카오톡 채널을 실시간으로 모니터링하고 있어요...
               </p>
             </div>
+            {pollError && (
+              <p className="text-xs text-red-400 mt-2 text-center">
+                연결 오류 — 수동 버튼을 눌러주세요
+              </p>
+            )}
           </div>
 
           {/* Demo CTA */}
