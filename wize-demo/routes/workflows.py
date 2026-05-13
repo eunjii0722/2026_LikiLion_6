@@ -11,12 +11,12 @@ def create_workflow(req: CreateWorkflowRequest):
     workflow_id = str(uuid.uuid4())
     user_id = "demo-user-001"
 
+    trigger_step_id = str(uuid.uuid4())
     with db.get_conn() as conn:
         conn.execute(
-            "INSERT INTO workflows (id, user_id, title, origin_prompt, is_active) VALUES (?, ?, ?, ?, 1)",
+            "INSERT INTO workflows (id, user_id, title, origin_prompt, is_active) VALUES (?, ?, ?, ?, 0)",
             (workflow_id, user_id, req.title, req.origin_prompt),
         )
-        trigger_step_id = str(uuid.uuid4())
         conn.execute(
             "INSERT INTO workflow_step (id, workflow_id, step_order, service, step_type, config) VALUES (?, ?, 0, 'google_form', 'trigger', ?)",
             (trigger_step_id, workflow_id, json.dumps(req.trigger_config)),
@@ -28,6 +28,9 @@ def create_workflow(req: CreateWorkflowRequest):
             )
 
     linked_sheet_id = req.trigger_config.get("linked_sheet_id")
+    if not linked_sheet_id:
+        raise HTTPException(status_code=400, detail="trigger_config.linked_sheet_id is required")
+
     watch_result = register_watch(linked_sheet_id, workflow_id)
 
     updated_config = {**req.trigger_config, **{
@@ -38,6 +41,10 @@ def create_workflow(req: CreateWorkflowRequest):
         conn.execute(
             "UPDATE workflow_step SET config = ? WHERE id = ?",
             (json.dumps(updated_config), trigger_step_id),
+        )
+        conn.execute(
+            "UPDATE workflows SET is_active = 1 WHERE id = ?",
+            (workflow_id,),
         )
 
     return {"workflow_id": workflow_id, "watch_expiration": watch_result["expiration"]}
