@@ -72,13 +72,16 @@ async def google_webhook(request: Request):
 
         try:
             if step["service"] == "google_sheets":
-                row = [fill_template(cell, data) for cell in config["row_template"]]
-                google_sheets.append_row(config["sheet_id"], config["sheet_name"], row)
+                row_template = config.get("row_template") or ["{{name}}", "{{email}}", "{{phone}}", "{{submitted_at}}"]
+                sheet_id = config.get("sheet_id") or linked_sheet_id
+                sheet_name = config.get("sheet_name") or "Sheet1"
+                row = [fill_template(cell, data) for cell in row_template]
+                google_sheets.append_row(sheet_id, sheet_name, row)
 
             elif step["service"] == "gmail":
-                to = fill_template(config["to"], data)
-                subject = fill_template(config["subject"], data)
-                body = fill_template(config["body"], data)
+                to = fill_template(config.get("to", "{{email}}"), data)
+                subject = fill_template(config.get("subject", "신청이 완료되었습니다"), data)
+                body = fill_template(config.get("body", "안녕하세요 {{name}}님,\n신청이 완료되었습니다."), data)
                 gmail.send_email(to, subject, body)
 
         except Exception as e:
