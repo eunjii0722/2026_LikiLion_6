@@ -1,0 +1,10 @@
+node_modules/
+.git/
+wize-demo/__pycache__/
+wize-demo/.venv/
+wize-demo/wize.db
+wize-demo/client_secret.json
+wize-demo/.env
+**/*.pyc
+**/__pycache__/
+.DS_Store

@@ -1,0 +1,19 @@
+# 프론트엔드
+node_modules/
+dist/
+wize-demo/frontend/
+
+# 백엔드
+wize-demo/.venv/
+wize-demo/__pycache__/
+wize-demo/*.db
+wize-demo/.env
+wize-demo/client_secret.json
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# 환경
+.env
+.DS_Store
+*.log
