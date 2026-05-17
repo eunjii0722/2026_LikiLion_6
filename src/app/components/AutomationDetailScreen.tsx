@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Play,
   RefreshCw,
+  Pencil,
 } from "lucide-react";
 import {
   getWorkflows,
@@ -39,15 +40,13 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-        {label}
-      </label>
+      <label className="block text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl bg-[#F7F8FC] border border-transparent text-sm text-gray-700 outline-none focus:border-[#6366F1] transition-colors"
+        className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-sm text-gray-800 outline-none focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/10 transition-all"
       />
     </div>
   );
@@ -241,7 +240,7 @@ export function AutomationDetailScreen() {
 
       <div className="space-y-6">
         {/* 구글폼 연동 */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-9 h-9 rounded-xl bg-yellow-50 flex items-center justify-center">
               <FileText className="w-4 h-4 text-yellow-500" />
@@ -249,6 +248,9 @@ export function AutomationDetailScreen() {
             <div className="flex-1">
               <h2 className="text-[15px] font-bold text-gray-900">구글폼 연동</h2>
             </div>
+            <span className="flex items-center gap-1 text-xs text-[#6366F1] bg-[#6366F1]/5 px-2 py-1 rounded-lg">
+              <Pencil className="w-3 h-3" />편집 가능
+            </span>
             {isConnected ? (
               <span className="flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
                 <CheckCircle className="w-3.5 h-3.5" />
@@ -263,16 +265,14 @@ export function AutomationDetailScreen() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-              구글폼 URL
-            </label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">구글폼 URL</label>
             <div className="flex gap-2">
               <input
                 type="url"
                 value={formUrl}
                 onChange={(e) => setFormUrl(e.target.value)}
                 placeholder="https://docs.google.com/forms/d/..."
-                className="flex-1 px-4 py-3 rounded-xl bg-[#F7F8FC] border border-transparent text-sm text-gray-700 outline-none focus:border-[#6366F1] transition-colors"
+                className="flex-1 px-4 py-3 rounded-xl bg-white border border-gray-200 text-sm text-gray-800 outline-none focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/10 transition-all"
               />
               {isConnected && (
                 <a
@@ -289,7 +289,7 @@ export function AutomationDetailScreen() {
         </div>
 
         {/* 구글시트 설정 */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
               <FileSpreadsheet className="w-4 h-4 text-green-600" />
@@ -297,6 +297,9 @@ export function AutomationDetailScreen() {
             <div className="flex-1">
               <h2 className="text-[15px] font-bold text-gray-900">구글시트 설정</h2>
             </div>
+            <span className="flex items-center gap-1 text-xs text-[#6366F1] bg-[#6366F1]/5 px-2 py-1 rounded-lg">
+              <Pencil className="w-3 h-3" />편집 가능
+            </span>
             {createdSheetUrl && (
               <span className="flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
                 <CheckCircle className="w-3.5 h-3.5" />
@@ -362,12 +365,17 @@ export function AutomationDetailScreen() {
         </div>
 
         {/* Gmail 설정 */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center">
               <Mail className="w-4 h-4 text-purple-600" />
             </div>
-            <h2 className="text-[15px] font-bold text-gray-900">Gmail 발송 설정</h2>
+            <div className="flex-1">
+              <h2 className="text-[15px] font-bold text-gray-900">Gmail 발송 설정</h2>
+            </div>
+            <span className="flex items-center gap-1 text-xs text-[#6366F1] bg-[#6366F1]/5 px-2 py-1 rounded-lg">
+              <Pencil className="w-3 h-3" />편집 가능
+            </span>
           </div>
           <div className="space-y-4">
             <Field
@@ -385,7 +393,7 @@ export function AutomationDetailScreen() {
                 onChange={(e) => setEmailBody(e.target.value)}
                 rows={4}
                 placeholder="{이름}님, {신청 과정} 수강 신청이 정상 접수되었습니다."
-                className="w-full px-4 py-3 rounded-xl bg-[#F7F8FC] border border-transparent text-sm text-gray-700 outline-none focus:border-[#6366F1] transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-sm text-gray-800 outline-none focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/10 transition-all resize-none"
               />
               <p className="text-xs text-gray-400 mt-1.5">
                 사용 가능한 변수: {"{이름}"} {"{이메일}"} {"{연락처}"} {"{신청 과정}"}
@@ -413,7 +421,7 @@ export function AutomationDetailScreen() {
         </div>
 
         {/* 실행 기록 */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[15px] font-bold text-gray-900">실행 기록</h2>
             {backendRunCount !== null && backendRunCount > workflow.runs.length && (
