@@ -32,6 +32,10 @@ export function InputScreen() {
 
   const handleSubmit = async () => {
     if (!inputText.trim()) return;
+    if (formUrl && !/https:\/\/docs\.google\.com\/forms\/d\//.test(formUrl)) {
+      setError("구글폼 URL 형식이 올바르지 않아요. (예: https://docs.google.com/forms/d/...)");
+      return;
+    }
     setIsLoading(true);
     try {
       const { workflow } = await parseText(inputText);

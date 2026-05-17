@@ -79,6 +79,13 @@ export function TestResultScreen() {
         .replace(/\{신청 과정\}/g, run.fields.item)
         .replace(/\{course\}/g, run.fields.item)
     : run.confirmationMessage;
+  const todayRunCount = workflow?.runs.filter((r) => {
+    const d = new Date(r.createdAt);
+    const today = new Date();
+    return d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate();
+  }).length ?? 0;
   const [isActivating, setIsActivating] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("extraction");
@@ -160,7 +167,7 @@ export function TestResultScreen() {
               </div>
               <div className="bg-[#F7F8FC] rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-400 mb-1">오늘 실행</p>
-                <p className="text-lg font-bold text-gray-900">0회</p>
+                <p className="text-lg font-bold text-gray-900">{todayRunCount}회</p>
               </div>
               <div className="bg-[#F7F8FC] rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-400 mb-1">정확도</p>

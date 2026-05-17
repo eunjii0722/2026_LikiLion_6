@@ -80,9 +80,9 @@ export function AnalysisScreen() {
   const [visibleCards, setVisibleCards] = useState<number[]>(
     [],
   );
-  const [editingId, setEditingId] = useState<number | null>(
-    null,
-  );
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [cardDetails, setCardDetails] = useState<Record<number, string>>({});
 
   useEffect(() => {
     let currentStep = 0;
@@ -212,9 +212,10 @@ export function AnalysisScreen() {
                   </span>
                 </div>
                 <button
-                  onClick={() =>
-                    setEditingId(isEditing ? null : card.id)
-                  }
+                  onClick={() => {
+                    if (!isEditing) setEditValue(cardDetails[card.id] ?? card.detail);
+                    setEditingId(isEditing ? null : card.id);
+                  }}
                   className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-[#6366F1]/10 hover:text-[#6366F1] flex items-center justify-center text-gray-400 transition-colors"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
@@ -233,11 +234,15 @@ export function AnalysisScreen() {
                 <div className="flex gap-2">
                   <input
                     className="flex-1 bg-[#F7F8FC] rounded-xl px-3 py-2 text-xs text-gray-700 outline-none border border-[#6366F1]/30 focus:border-[#6366F1] transition-colors"
-                    defaultValue={card.detail}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
                     autoFocus
                   />
                   <button
-                    onClick={() => setEditingId(null)}
+                    onClick={() => {
+                      setCardDetails((prev) => ({ ...prev, [card.id]: editValue }));
+                      setEditingId(null);
+                    }}
                     className="px-3 py-2 rounded-xl bg-[#6366F1] text-white text-xs font-semibold hover:bg-[#5558E3] transition-colors"
                   >
                     저장
@@ -245,7 +250,7 @@ export function AnalysisScreen() {
                 </div>
               ) : (
                 <div className="bg-gray-50 rounded-xl px-3 py-2 text-xs text-gray-500">
-                  {card.detail}
+                  {cardDetails[card.id] ?? card.detail}
                 </div>
               )}
             </div>
