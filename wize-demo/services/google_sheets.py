@@ -1,6 +1,56 @@
 from googleapiclient.discovery import build
 from services.google_auth import get_credentials
 
+def create_sheet(title: str, headers: list[str] | None = None) -> dict:
+    if headers is None:
+        headers = ["제출일", "이름", "이메일", "연락처", "신청 과정"]
+    creds = get_credentials()
+    service = build("sheets", "v4", credentials=creds)
+
+    spreadsheet = service.spreadsheets().create(
+        body={
+            "properties": {"title": title},
+            "sheets": [{"properties": {"title": title}}],
+        },
+        fields="spreadsheetId,spreadsheetUrl,sheets/properties/sheetId",
+    ).execute()
+
+    sheet_id = spreadsheet["spreadsheetId"]
+    grid_id = spreadsheet["sheets"][0]["properties"]["sheetId"]
+
+    # 헤더 행 추가
+    service.spreadsheets().values().update(
+        spreadsheetId=sheet_id,
+        range=f"{title}!A1",
+        valueInputOption="USER_ENTERED",
+        body={"values": [headers]},
+    ).execute()
+
+    # 헤더 행 굵게 + 배경색
+    service.spreadsheets().batchUpdate(
+        spreadsheetId=sheet_id,
+        body={
+            "requests": [{
+                "repeatCell": {
+                    "range": {"sheetId": grid_id, "startRowIndex": 0, "endRowIndex": 1},
+                    "cell": {
+                        "userEnteredFormat": {
+                            "textFormat": {"bold": True},
+                            "backgroundColor": {"red": 0.85, "green": 0.92, "blue": 0.85},
+                        }
+                    },
+                    "fields": "userEnteredFormat(textFormat,backgroundColor)",
+                }
+            }]
+        },
+    ).execute()
+
+    return {
+        "sheet_id": sheet_id,
+        "sheet_url": spreadsheet["spreadsheetUrl"],
+        "sheet_name": title,
+    }
+
 def append_row(sheet_id: str, sheet_name: str, row: list):
     creds = get_credentials()
     service = build("sheets", "v4", credentials=creds)

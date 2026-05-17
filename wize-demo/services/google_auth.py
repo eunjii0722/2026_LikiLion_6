@@ -10,13 +10,16 @@ SCOPES = [
 ]
 
 def get_credentials() -> Credentials:
-    creds = Credentials(
-        token=None,
-        refresh_token=os.getenv("GOOGLE_REFRESH_TOKEN"),
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-        scopes=SCOPES,
-    )
-    creds.refresh(Request())
-    return creds
+    try:
+        creds = Credentials(
+            token=None,
+            refresh_token=os.getenv("GOOGLE_REFRESH_TOKEN"),
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=os.getenv("GOOGLE_CLIENT_ID"),
+            client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+            scopes=SCOPES,
+        )
+        creds.refresh(Request())
+        return creds
+    except Exception as e:
+        raise RuntimeError(f"Google 인증 실패: GOOGLE_REFRESH_TOKEN이 만료되었거나 잘못되었습니다. 원인: {e}")

@@ -1,7 +1,7 @@
 import os
 import anthropic
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY")) if os.getenv("ANTHROPIC_API_KEY") else None
 
 SYSTEM = """당신은 한국어 업무 설명을 자동화 워크플로우 JSON으로 변환합니다.
 트리거는 google_form, 액션은 google_sheets와 gmail만 사용합니다.
@@ -76,16 +76,56 @@ TOOLS = [
     }
 ]
 
+def fallback_workflow(text: str) -> dict:
+    normalized = text.lower()
+    actions = [
+        {
+            "order": 1,
+            "service": "google_sheets",
+            "config": {
+                "row_template": ["{{name}}", "{{email}}", "{{phone}}", "{{submitted_at}}"],
+                "sheet_id": "",
+                "sheet_name": "신청자 목록",
+            },
+        }
+    ]
+
+    wants_message = any(keyword in normalized for keyword in ["메일", "email", "이메일", "gmail", "안내", "확인", "발송", "보내"])
+    if wants_message:
+        actions.append(
+            {
+                "order": 2,
+                "service": "gmail",
+                "config": {
+                    "to": "{{email}}",
+                    "subject": "신청이 완료되었습니다",
+                    "body": "안녕하세요 {{name}}님,\n신청이 정상적으로 접수되었습니다. 담당자가 곧 확인해드릴게요.",
+                },
+            }
+        )
+
+    return {
+        "trigger": {"service": "google_form", "form_id": ""},
+        "actions": actions,
+    }
+
 def parse_natural_language(text: str) -> dict:
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1024,
-        system=SYSTEM,
-        tools=TOOLS,
-        tool_choice={"type": "tool", "name": "create_workflow"},
-        messages=[{"role": "user", "content": text}]
-    )
-    for block in response.content:
-        if block.type == "tool_use":
-            return block.input
-    return {"trigger": {"service": "google_form", "form_id": ""}, "actions": []}
+    if not client:
+        return fallback_workflow(text)
+
+    try:
+        response = client.messages.create(
+            model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+            max_tokens=1024,
+            system=SYSTEM,
+            tools=TOOLS,
+            tool_choice={"type": "tool", "name": "create_workflow"},
+            messages=[{"role": "user", "content": text}]
+        )
+        for block in response.content:
+            if block.type == "tool_use":
+                return block.input
+    except Exception:
+        return fallback_workflow(text)
+
+    return fallback_workflow(text)

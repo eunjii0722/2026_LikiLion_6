@@ -2,25 +2,27 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Sparkles, ArrowRight, Lightbulb } from "lucide-react";
 import { parseText } from "../../api";
+import { buildFallbackWorkflow } from "../productStore";
 
 const suggestions = [
   {
-    label: "수강 신청 정리",
-    text: "카카오톡으로 수강 신청이 오면 이름, 연락처, 신청 수업을 구글시트에 정리하고 신청자에게 확인 메시지를 보내줘.",
+    label: "수강 신청 기본형",
+    text: "구글폼으로 수강 신청이 들어오면 이름, 이메일, 연락처, 신청 과정을 구글시트에 저장하고 신청자에게 Gmail 확인 메일을 보내줘.",
   },
   {
-    label: "예약 내용 정리",
-    text: "네이버 예약으로 새 예약이 들어오면 구글 캘린더에 자동으로 등록하고 고객에게 예약 확인 안내를 보내줘.",
+    label: "웹 개발반 신청",
+    text: "구글폼 웹 개발 입문반 신청 응답을 구글시트에 저장하고 신청자 이메일로 접수 완료 메일을 보내줘.",
   },
   {
-    label: "결석자 안내 발송",
-    text: "수업 전날 구글시트에 있는 수강생 목록을 확인해서 결석 처리된 학생에게 자동으로 안내 메시지를 보내줘.",
+    label: "파이썬반 신청",
+    text: "구글폼 파이썬 기초반 신청 응답이 제출되면 구글시트에 행을 추가하고 Gmail로 수강 신청 완료 메일을 보내줘.",
   },
 ];
 
 export function InputScreen() {
   const navigate = useNavigate();
   const [inputText, setInputText] = useState("");
+  const [formUrl, setFormUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,29 +35,30 @@ export function InputScreen() {
     setIsLoading(true);
     try {
       const { workflow } = await parseText(inputText);
-      navigate("/analysis", { state: { workflow, inputText } });
+      navigate("/analysis", { state: { workflow, inputText, formUrl } });
     } catch {
-      setError("분석 중 오류가 발생했어요. 다시 시도해주세요.");
+      const workflow = buildFallbackWorkflow(inputText);
+      navigate("/analysis", { state: { workflow, inputText, formUrl, localMode: true } });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-[860px] mx-auto px-8 py-16">
+    <div className="max-w-[860px] mx-auto px-4 md:px-8 py-8 md:py-16">
       {/* Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 bg-[#F0F0FF] text-[#6366F1] px-4 py-1.5 rounded-full text-sm font-medium mb-6">
           <Sparkles className="w-3.5 h-3.5" />
           AI 자동화 만들기
         </div>
-        <h1 className="text-[40px] font-bold text-gray-900 mb-4" style={{ letterSpacing: "-0.8px" }}>
-          어떤 업무를 자동화하고 싶나요?
+        <h1 className="text-[28px] md:text-[40px] font-bold text-gray-900 mb-4" style={{ letterSpacing: "-0.8px" }}>
+          어떤 수강 신청 폼을 자동화할까요?
         </h1>
         <p className="text-[16px] text-gray-500 leading-relaxed">
-          평소에 반복해서 하는 일을 그대로 적어주세요.
+          구글폼 응답을 어떻게 저장하고 안내할지 적어주세요.
           <br />
-          AI가 자동화 흐름으로 바꿔드릴게요.
+          이 MVP는 구글폼, 구글시트, Gmail 흐름으로만 구성됩니다.
         </p>
       </div>
 
@@ -70,13 +73,13 @@ export function InputScreen() {
         <textarea
           value={inputText}
           onChange={(e) => { setInputText(e.target.value); setError(""); }}
-          placeholder="카카오톡으로 수강 신청이 오면 이름, 연락처, 신청 수업을 구글시트에 정리하고 신청자에게 확인 메시지를 보내줘."
+          placeholder="구글폼으로 수강 신청이 들어오면 이름, 이메일, 연락처, 신청 과정을 구글시트에 저장하고 신청자에게 Gmail 확인 메일을 보내줘."
           className="w-full p-6 text-[16px] text-gray-700 placeholder-gray-300 resize-none outline-none bg-transparent leading-relaxed"
           rows={6}
         />
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
           <span className="text-sm text-gray-400">
-            {inputText.length > 0 ? `${inputText.length}자 입력됨` : "어떤 말로도 입력해도 괜찮아요 😊"}
+            {inputText.length > 0 ? `${inputText.length}자 입력됨` : "구글폼 신청 자동화에 필요한 내용을 적어주세요"}
           </span>
           <button
             onClick={handleSubmit}
@@ -100,6 +103,21 @@ export function InputScreen() {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Google Form URL */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-600 mb-2">
+          연결할 구글폼 URL{" "}
+          <span className="text-gray-400 font-normal">(선택사항 — 데모는 미리 연결된 폼 사용)</span>
+        </label>
+        <input
+          type="url"
+          value={formUrl}
+          onChange={(e) => setFormUrl(e.target.value)}
+          placeholder="https://docs.google.com/forms/d/..."
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder-gray-300 outline-none focus:border-[#6366F1] transition-colors bg-white"
+        />
       </div>
 
       {/* Suggestions */}
@@ -128,12 +146,12 @@ export function InputScreen() {
       {/* Tips */}
       <div className="bg-gradient-to-r from-[#F0F0FF] to-[#F5F0FF] rounded-2xl p-6 border border-[#6366F1]/10">
         <h4 className="text-sm font-semibold text-[#6366F1] mb-3">💡 이렇게 입력해보세요</h4>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
-            "\"카카오톡으로 주문이 오면 엑셀에 정리해줘\"",
-            "\"매일 아침 9시에 할 일 목록을 카톡으로 알려줘\"",
-            "\"인스타 DM 문의를 구글시트에 모아줘\"",
-            "\"수강생이 결제하면 확인 문자를 보내줘\"",
+            "\"구글폼 응답을 수강신청 응답 시트에 저장해줘\"",
+            "\"신청자 이메일로 접수 완료 메일을 보내줘\"",
+            "\"이름, 이메일, 연락처, 신청 과정을 추출해줘\"",
+            "\"파이썬 기초반 신청 자동화를 만들어줘\"",
           ].map((tip, idx) => (
             <div
               key={idx}

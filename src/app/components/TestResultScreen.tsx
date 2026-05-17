@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import {
   CheckCircle,
-  MessageCircle,
+  FileText,
   Brain,
   FileSpreadsheet,
-  Send,
+  Mail,
   Zap,
   ArrowRight,
   RotateCcw,
@@ -14,16 +14,19 @@ import {
   PartyPopper,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { activateWorkflow, buildRun, getWorkflows } from "../productStore";
+import { reactivateWorkflow } from "../../api";
+import type { WorkflowDraft } from "../../api";
 
 const resultSteps = [
   {
     id: 1,
-    icon: MessageCircle,
+    icon: FileText,
     iconBg: "bg-yellow-50",
     iconColor: "text-yellow-500",
     status: "완료",
     statusColor: "text-green-600 bg-green-50",
-    title: "카카오톡 메시지 수신",
+    title: "구글폼 응답 감지",
   },
   {
     id: 2,
@@ -32,7 +35,7 @@ const resultSteps = [
     iconColor: "text-blue-500",
     status: "완료",
     statusColor: "text-green-600 bg-green-50",
-    title: "AI 정보 추출",
+    title: "응답 필드 정리",
   },
   {
     id: 3,
@@ -45,27 +48,74 @@ const resultSteps = [
   },
   {
     id: 4,
-    icon: Send,
+    icon: Mail,
     iconBg: "bg-purple-50",
     iconColor: "text-purple-600",
     status: "완료",
     statusColor: "text-green-600 bg-green-50",
-    title: "메시지 미리보기 및 승인",
+    title: "Gmail 발송",
   },
 ];
 
 export function TestResultScreen() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const workflowId =
+    (location.state?.workflowId as string | undefined) ??
+    localStorage.getItem("workflow_id") ??
+    "";
+  const workflow = getWorkflows().find((item) => item.id === workflowId);
+  const run = workflow?.runs[0] ?? buildRun(workflow?.originPrompt ?? "");
+
+  const sheetAction = workflow?.actions.find((a) => a.service === "google_sheets");
+  const gmailAction = workflow?.actions.find((a) => a.service === "gmail");
+  const sheetName = (sheetAction?.config?.sheet_name as string) ?? "수강신청 응답";
+  const emailSubject = (gmailAction?.config?.subject as string) ?? "[WIZE] 수강 신청이 접수되었습니다";
+  const rawBodyTemplate = (gmailAction?.config?.body_template as string) ?? "";
+  const emailBody = rawBodyTemplate
+    ? rawBodyTemplate
+        .replace(/\{이름\}/g, run.fields.name)
+        .replace(/\{name\}/g, run.fields.name)
+        .replace(/\{신청 과정\}/g, run.fields.item)
+        .replace(/\{course\}/g, run.fields.item)
+    : run.confirmationMessage;
   const [isActivating, setIsActivating] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("extraction");
 
-  const handleActivate = () => {
+  const handleRetry = () => {
+    if (!workflow) {
+      navigate("/input");
+      return;
+    }
+    const retryWorkflow: WorkflowDraft = {
+      trigger: { service: "google_form", form_id: "local-product-form" },
+      actions: workflow.actions,
+    };
+    navigate("/workflow", {
+      state: {
+        workflow: retryWorkflow,
+        inputText: workflow.originPrompt,
+        formUrl: workflow.formUrl,
+      },
+    });
+  };
+
+  const handleActivate = async () => {
     setIsActivating(true);
-    setTimeout(() => {
-      setIsActivating(false);
-      setIsActive(true);
-    }, 1500);
+    if (workflowId) activateWorkflow(workflowId);
+    const minDelay = new Promise<void>((r) => setTimeout(r, 1200));
+    if (workflow?.backendWorkflowId) {
+      try {
+        await Promise.all([reactivateWorkflow(workflow.backendWorkflowId), minDelay]);
+      } catch {
+        await minDelay;
+      }
+    } else {
+      await minDelay;
+    }
+    setIsActivating(false);
+    setIsActive(true);
   };
 
   if (isActive) {
@@ -83,8 +133,8 @@ export function TestResultScreen() {
             자동화가 켜졌어요! 🎉
           </h1>
           <p className="text-[16px] text-gray-500 mb-8 leading-relaxed">
-            이제부터 카카오톡 수강 신청이 오면<br />
-            자동으로 구글시트에 정리되고 확인 메시지가 발송돼요.
+            이제부터 새 접수가 들어오면<br />
+            자동으로 시트에 정리되고 확인 메일이 발송돼요.
           </p>
 
           <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 text-left">
@@ -94,7 +144,7 @@ export function TestResultScreen() {
                   <Zap className="w-5 h-5 text-white fill-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">수강 신청 자동화</p>
+                  <p className="font-bold text-gray-900">{workflow?.title ?? "업무 접수 자동화"}</p>
                   <p className="text-sm text-gray-500">방금 생성됨</p>
                 </div>
               </div>
@@ -106,7 +156,7 @@ export function TestResultScreen() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-[#F7F8FC] rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-400 mb-1">처리된 건수</p>
-                <p className="text-lg font-bold text-gray-900">0건</p>
+                <p className="text-lg font-bold text-gray-900">{workflow?.runs.length ?? 1}건</p>
               </div>
               <div className="bg-[#F7F8FC] rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-400 mb-1">오늘 실행</p>
@@ -140,14 +190,14 @@ export function TestResultScreen() {
   }
 
   return (
-    <div className="max-w-[900px] mx-auto px-8 py-12">
+    <div className="max-w-[900px] mx-auto px-4 md:px-8 py-8 md:py-12">
       {/* Header */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
           <CheckCircle className="w-3.5 h-3.5" />
           테스트 성공
         </div>
-        <h1 className="text-[40px] font-bold text-gray-900 mb-4" style={{ letterSpacing: "-0.8px" }}>
+        <h1 className="text-[28px] md:text-[40px] font-bold text-gray-900 mb-4" style={{ letterSpacing: "-0.8px" }}>
           테스트가 완료되었어요. ✅
         </h1>
         <p className="text-[16px] text-gray-500">
@@ -158,23 +208,23 @@ export function TestResultScreen() {
       {/* Step status */}
       <div className="flex items-center justify-center gap-0 mb-10">
         {resultSteps.map((step, idx) => (
-          <div key={step.id} className="flex items-center">
+          <div key={step.id} className="flex items-center flex-shrink-0">
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-xl ${step.iconBg} flex items-center justify-center border-2 border-green-200`}
+                className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${step.iconBg} flex items-center justify-center border-2 border-green-200`}
               >
-                <step.icon className={`w-5 h-5 ${step.iconColor}`} />
+                <step.icon className={`w-4 h-4 md:w-5 md:h-5 ${step.iconColor}`} />
               </div>
               <div className="mt-2 text-center">
-                <div className="text-xs font-medium text-gray-600">{step.title}</div>
+                <div className="hidden md:block text-xs font-medium text-gray-600">{step.title}</div>
                 <div className={`text-xs font-semibold mt-1 px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${step.statusColor}`}>
                   <CheckCircle className="w-3 h-3" />
-                  {step.status}
+                  <span className="hidden md:inline">{step.status}</span>
                 </div>
               </div>
             </div>
             {idx < resultSteps.length - 1 && (
-              <div className="w-12 h-px bg-green-200 mb-12 mx-1" />
+              <div className="w-4 md:w-12 h-px bg-green-200 mb-8 md:mb-12 mx-1 flex-shrink-0" />
             )}
           </div>
         ))}
@@ -190,9 +240,9 @@ export function TestResultScreen() {
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center">
-                <MessageCircle className="w-4 h-4 text-yellow-500" />
+                <FileText className="w-4 h-4 text-yellow-500" />
               </div>
-              <span className="font-semibold text-gray-900">입력된 카카오톡 메시지</span>
+              <span className="font-semibold text-gray-900">제출된 구글폼 응답</span>
             </div>
             {expandedSection === "input" ? (
               <ChevronUp className="w-4 h-4 text-gray-400" />
@@ -210,7 +260,7 @@ export function TestResultScreen() {
                   <div>
                     <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-yellow-100 inline-block">
                       <p className="text-[15px] text-gray-800">
-                        이은지 / 010-1234-5678 / 파이썬 기초반 신청합니다.
+                        {run.inputMessage}
                       </p>
                     </div>
                     <p className="text-xs text-gray-400 mt-1 ml-1">오전 10:23</p>
@@ -241,11 +291,12 @@ export function TestResultScreen() {
           </button>
           {expandedSection === "extraction" && (
             <div className="px-6 pb-5 border-t border-gray-50">
-              <div className="mt-4 grid grid-cols-3 gap-3">
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label: "이름", value: "이은지", icon: "👤" },
-                  { label: "연락처", value: "010-1234-5678", icon: "📱" },
-                  { label: "수업명", value: "파이썬 기초반", icon: "📚" },
+                  { label: "이름", value: run.fields.name, icon: "👤" },
+                  { label: "이메일", value: run.fields.email, icon: "✉️" },
+                  { label: "연락처", value: run.fields.phone, icon: "📱" },
+                  { label: "신청 과정", value: run.fields.item, icon: "📚" },
                 ].map((item, idx) => (
                   <div key={idx} className="bg-blue-50 rounded-xl p-4">
                     <div className="text-lg mb-1">{item.icon}</div>
@@ -272,7 +323,7 @@ export function TestResultScreen() {
               <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
                 <FileSpreadsheet className="w-4 h-4 text-green-600" />
               </div>
-              <span className="font-semibold text-gray-900">구글시트 저장 결과</span>
+              <span className="font-semibold text-gray-900">구글시트 저장 결과 — {sheetName}</span>
             </div>
             {expandedSection === "sheet" ? (
               <ChevronUp className="w-4 h-4 text-gray-400" />
@@ -284,30 +335,33 @@ export function TestResultScreen() {
             <div className="px-6 pb-5 border-t border-gray-50">
               <div className="mt-4 bg-[#F0FDF4] rounded-xl overflow-hidden border border-green-100">
                 {/* Sheet header */}
-                <div className="grid grid-cols-4 bg-green-100 text-green-800 text-xs font-semibold px-4 py-2.5 gap-4">
+                <div className="grid grid-cols-5 bg-green-100 text-green-800 text-xs font-semibold px-4 py-2.5 gap-4">
+                  <span>제출일</span>
                   <span>이름</span>
+                  <span>이메일</span>
                   <span>연락처</span>
-                  <span>수업명</span>
-                  <span>신청일</span>
+                  <span>신청 과정</span>
                 </div>
                 {/* Example rows */}
-                <div className="grid grid-cols-4 text-xs text-gray-400 px-4 py-2.5 gap-4 border-b border-green-50">
+                <div className="grid grid-cols-5 text-xs text-gray-400 px-4 py-2.5 gap-4 border-b border-green-50">
+                  <span>2026.05.07</span>
                   <span>김민지</span>
+                  <span>minji@example.com</span>
                   <span>010-9876-5432</span>
                   <span>HTML 기초반</span>
-                  <span>2026.05.07</span>
                 </div>
                 {/* New row (highlighted) */}
-                <div className="grid grid-cols-4 text-sm text-green-800 px-4 py-3 gap-4 bg-green-50 font-medium border-l-4 border-green-400">
-                  <span>이은지</span>
-                  <span>010-1234-5678</span>
-                  <span>파이썬 기초반</span>
-                  <span>2026.05.08</span>
+                <div className="grid grid-cols-5 text-sm text-green-800 px-4 py-3 gap-4 bg-green-50 font-medium border-l-4 border-green-400">
+                  <span>{new Date(run.createdAt).toLocaleDateString("ko-KR")}</span>
+                  <span>{run.fields.name}</span>
+                  <span>{run.fields.email}</span>
+                  <span>{run.fields.phone}</span>
+                  <span>{run.fields.item}</span>
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm text-gray-500">새 행이 추가되었어요 (3행)</span>
+                <span className="text-sm text-gray-500">「{sheetName}」에 새 행이 추가되었어요</span>
               </div>
             </div>
           )}
@@ -321,9 +375,12 @@ export function TestResultScreen() {
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                <Send className="w-4 h-4 text-purple-600" />
+                <Mail className="w-4 h-4 text-purple-600" />
               </div>
-              <span className="font-semibold text-gray-900">발송된 확인 메시지</span>
+              <div>
+                <span className="font-semibold text-gray-900">발송된 Gmail 확인 메일</span>
+                <p className="text-xs text-gray-400 mt-0.5">제목: {emailSubject}</p>
+              </div>
             </div>
             {expandedSection === "message" ? (
               <ChevronUp className="w-4 h-4 text-gray-400" />
@@ -341,7 +398,7 @@ export function TestResultScreen() {
                   <div className="flex flex-col items-end">
                     <div className="bg-[#6366F1] rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm inline-block">
                       <p className="text-[15px] text-white">
-                        파이썬 기초반 신청이 완료되었습니다. 감사합니다! 🎉
+                        {emailBody}
                       </p>
                     </div>
                     <p className="text-xs text-gray-400 mt-1 mr-1">오전 10:23</p>
@@ -350,7 +407,7 @@ export function TestResultScreen() {
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm text-gray-500">이은지 님께 카카오톡으로 발송 완료</span>
+                <span className="text-sm text-gray-500">{run.fields.name} 님께 Gmail 확인 메일 발송 완료</span>
               </div>
             </div>
           )}
@@ -358,10 +415,10 @@ export function TestResultScreen() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
         <button
-          onClick={() => navigate("/workflow")}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-all"
+          onClick={handleRetry}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-all"
         >
           <RotateCcw className="w-4 h-4" />
           다시 테스트하기
@@ -369,7 +426,7 @@ export function TestResultScreen() {
         <button
           onClick={handleActivate}
           disabled={isActivating}
-          className="flex items-center gap-2 px-10 py-3.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-[16px] font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-200 hover:-translate-y-0.5"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-10 py-3.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white text-[16px] font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-200 hover:-translate-y-0.5"
         >
           {isActivating ? (
             <>

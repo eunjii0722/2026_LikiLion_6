@@ -17,14 +17,12 @@ Vite (:5173)  --proxy-->  FastAPI (:8000)
 Vite proxies all `/parse`, `/workflows`, `/webhook` requests to FastAPI. Hot reload works normally.
 
 ### Demo day
-```
-npm run build  →  wize-demo/frontend/
+```npm run build  →  wize-demo/frontend/
 uvicorn main:app --port 8000
 ```
-FastAPI serves the built frontend as static files. One process only.
+FastAPI serves the built frontend as static files. One process only.* div 스크롤할 때
 
 ---
-
 ## Data Flow
 
 ### Main flow

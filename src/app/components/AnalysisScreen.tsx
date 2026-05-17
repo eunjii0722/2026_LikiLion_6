@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import type { WorkflowDraft } from "../../api";
 import {
-  MessageCircle,
   Database,
   FileText,
-  Send,
+  Mail,
   Edit3,
   ArrowRight,
   CheckCircle,
@@ -24,6 +23,7 @@ export function AnalysisScreen() {
   const location = useLocation();
   const stateWorkflow = location.state?.workflow as WorkflowDraft | undefined;
   const inputText = location.state?.inputText as string | undefined;
+  const formUrl = (location.state?.formUrl as string) ?? "";
 
   useEffect(() => {
     if (!stateWorkflow) navigate("/input", { replace: true });
@@ -41,10 +41,11 @@ export function AnalysisScreen() {
           badge: "시작 조건",
           title: "구글 폼 응답 감지",
           description: "구글 폼에 새 응답이 들어오면 자동화가 시작돼요.",
-          detail: "Google Form 연동 완료",
+          detail: formUrl ? `연동됨: ${formUrl}` : "미연동 (데모 폼 사용 중)",
         },
         ...stateWorkflow.actions.map((action, i) => {
           if (action.service === "google_sheets") {
+            const sheetName = (action.config?.sheet_name as string) ?? "수강신청 응답";
             return {
               id: i + 2,
               icon: Database,
@@ -55,12 +56,13 @@ export function AnalysisScreen() {
               badge: "저장",
               title: "구글시트에 자동 저장",
               description: "응답 데이터가 지정한 구글시트에 한 줄씩 추가돼요.",
-              detail: "Google Sheets 연동 완료",
+              detail: `시트: ${sheetName}`,
             };
           }
+          const subject = (action.config?.subject as string) ?? "[WIZE] 수강 신청이 접수되었습니다";
           return {
             id: i + 2,
-            icon: Send,
+            icon: Mail,
             iconBg: "bg-purple-50",
             iconColor: "text-purple-600",
             borderColor: "border-purple-200",
@@ -68,7 +70,7 @@ export function AnalysisScreen() {
             badge: "발송",
             title: "Gmail 자동 발송",
             description: "신청자에게 확인 메일을 자동으로 발송해요.",
-            detail: "Gmail 연동 완료",
+            detail: `제목: ${subject}`,
           };
         }),
       ]
@@ -107,7 +109,7 @@ export function AnalysisScreen() {
   }, []);
 
   return (
-    <div className="max-w-[900px] mx-auto px-8 py-14">
+    <div className="max-w-[900px] mx-auto px-4 md:px-8 py-8 md:py-14">
       {/* Header */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 bg-[#F0F0FF] text-[#6366F1] px-4 py-1.5 rounded-full text-sm font-medium mb-6">
@@ -115,7 +117,7 @@ export function AnalysisScreen() {
           AI 분석 결과
         </div>
         <h1
-          className="text-[38px] font-bold text-gray-900 mb-3"
+          className="text-[26px] md:text-[38px] font-bold text-gray-900 mb-3"
           style={{ letterSpacing: "-0.7px" }}
         >
           {isDone
@@ -130,11 +132,11 @@ export function AnalysisScreen() {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-center gap-3 mb-12">
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
         {analysisSteps.map((step, idx) => (
-          <div key={idx} className="flex items-center gap-3">
+          <div key={idx} className="flex items-center gap-2">
             <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-500 ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all duration-500 ${
                 idx < stepIndex
                   ? "bg-[#6366F1]/10 text-[#6366F1]"
                   : idx === stepIndex
@@ -144,22 +146,19 @@ export function AnalysisScreen() {
                     : "bg-gray-100 text-gray-400"
               }`}
             >
-              {idx < stepIndex ||
-              (isDone && idx === stepIndex) ? (
-                <CheckCircle className="w-3 h-3" />
+              {idx < stepIndex || (isDone && idx === stepIndex) ? (
+                <CheckCircle className="w-3 h-3 flex-shrink-0" />
               ) : idx === stepIndex && !isDone ? (
-                <div className="w-2.5 h-2.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <div className="w-2.5 h-2.5 border-2 border-white/40 border-t-white rounded-full animate-spin flex-shrink-0" />
               ) : (
-                <div className="w-2 h-2 rounded-full bg-gray-300" />
+                <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
               )}
-              {step.label}
+              <span className="hidden sm:inline">{step.label}</span>
             </div>
             {idx < analysisSteps.length - 1 && (
               <div
-                className={`w-6 h-px transition-all duration-500 ${
-                  idx < stepIndex
-                    ? "bg-[#6366F1]/40"
-                    : "bg-gray-200"
+                className={`hidden sm:block w-4 h-px transition-all duration-500 ${
+                  idx < stepIndex ? "bg-[#6366F1]/40" : "bg-gray-200"
                 }`}
               />
             )}
@@ -183,7 +182,7 @@ export function AnalysisScreen() {
       </div>
 
       {/* Analysis Result Cards */}
-      <div className="grid grid-cols-2 gap-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
         {analysisCards.map((card) => {
           const isVisible = visibleCards.includes(card.id);
           const isEditing = editingId === card.id;
@@ -262,7 +261,7 @@ export function AnalysisScreen() {
           </div>
           <div className="flex-1">
             <p className="text-xs text-green-600">
-              카카오톡 · 구글시트 연동 방법을 확인했고, 흐름이
+              구글폼 · 구글시트 · Gmail 연동 방법을 확인했고, 흐름이
               문제없이 구성됐어요.
             </p>
           </div>
@@ -270,7 +269,7 @@ export function AnalysisScreen() {
       )}
 
       {/* CTA */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <button
           onClick={() => navigate("/input")}
           className="px-6 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
@@ -278,7 +277,7 @@ export function AnalysisScreen() {
           다시 입력하기
         </button>
         <button
-          onClick={() => navigate("/workflow", { state: { workflow: stateWorkflow, inputText } })}
+          onClick={() => navigate("/workflow", { state: { workflow: stateWorkflow, inputText, formUrl } })}
           disabled={!isDone}
           className={`flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all ${
             isDone

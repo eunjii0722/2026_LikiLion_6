@@ -31,6 +31,8 @@ export default defineConfig({
     proxy: {
       '/parse': 'http://localhost:8000',
       '/workflows': 'http://localhost:8000',
+      '/sheets': 'http://localhost:8000',
+      '/webhook': 'http://localhost:8000',
     },
   },
   build: {

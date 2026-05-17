@@ -2,7 +2,7 @@ import sqlite3
 import os
 from contextlib import contextmanager
 
-DB_PATH = "wize.db"
+DB_PATH = os.getenv("DB_PATH", "wize.db")
 
 def init():
     with get_conn() as conn:

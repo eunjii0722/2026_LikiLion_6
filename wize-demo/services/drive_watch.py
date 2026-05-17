@@ -13,10 +13,11 @@ def register_watch(file_id: str, workflow_id: str) -> dict:
         (datetime.now(timezone.utc) + timedelta(days=7)).timestamp() * 1000
     )
 
+    base_url = os.getenv("APP_URL") or os.getenv("NGROK_URL", "")
     body = {
         "id": channel_id,
         "type": "web_hook",
-        "address": f"{os.getenv('NGROK_URL')}/webhook/google",
+        "address": f"{base_url}/webhook/google",
         "expiration": expiration_ms,
         "token": workflow_id,
     }

@@ -59,9 +59,49 @@ def get_workflow(workflow_id: str):
             "SELECT * FROM execution_runs WHERE workflow_id = ? ORDER BY started_at DESC LIMIT 5",
             (workflow_id,),
         ).fetchall()
+        trigger_step = conn.execute(
+            "SELECT config FROM workflow_step WHERE workflow_id=? AND service='google_form'",
+            (workflow_id,),
+        ).fetchone()
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
-    return {"workflow": dict(workflow), "logs": [dict(l) for l in logs]}
+    trigger_config = json.loads(trigger_step["config"]) if trigger_step else {}
+    return {
+        "workflow": dict(workflow),
+        "logs": [dict(l) for l in logs],
+        "watch_expiration": trigger_config.get("watch_expiration"),
+    }
+
+
+@router.post("/workflows/{workflow_id}/reactivate")
+def reactivate_workflow(workflow_id: str):
+    with db.get_conn() as conn:
+        step = conn.execute(
+            "SELECT config FROM workflow_step WHERE workflow_id=? AND service='google_form'",
+            (workflow_id,),
+        ).fetchone()
+    if not step:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+
+    config = json.loads(step["config"])
+    linked_sheet_id = config.get("linked_sheet_id")
+    if not linked_sheet_id:
+        raise HTTPException(status_code=400, detail="linked_sheet_id not found in config")
+
+    watch_result = register_watch(linked_sheet_id, workflow_id)
+
+    updated_config = {**config,
+        "watch_channel_id": watch_result["channel_id"],
+        "watch_expiration": watch_result["expiration"],
+    }
+    with db.get_conn() as conn:
+        conn.execute(
+            "UPDATE workflow_step SET config=? WHERE workflow_id=? AND service='google_form'",
+            (json.dumps(updated_config), workflow_id),
+        )
+        conn.execute("UPDATE workflows SET is_active=1 WHERE id=?", (workflow_id,))
+
+    return {"workflow_id": workflow_id, "watch_expiration": watch_result["expiration"], "status": "reactivated"}
 
 @router.get("/workflows/{workflow_id}/logs")
 def get_logs(workflow_id: str):

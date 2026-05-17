@@ -47,7 +47,9 @@ const DEMO_SHEET_ID = "1bMAyj4CqFJbBn3IFQMlTV5y227pEQl9S_GPypxftvAQ";
 
 export async function createWorkflow(
   originPrompt: string,
-  actions: ActionStep[]
+  actions: ActionStep[],
+  sheetId?: string,
+  formId?: string,
 ): Promise<CreateWorkflowResponse> {
   const res = await fetch(`${BASE}/workflows`, {
     method: "POST",
@@ -57,13 +59,45 @@ export async function createWorkflow(
       origin_prompt: originPrompt,
       trigger_config: {
         service: "google_form",
-        form_id: DEMO_FORM_ID,
-        linked_sheet_id: DEMO_SHEET_ID,
+        form_id: formId ?? DEMO_FORM_ID,
+        linked_sheet_id: sheetId ?? DEMO_SHEET_ID,
       },
       actions,
     }),
   });
   if (!res.ok) throw new Error(`Create workflow failed: ${res.status}`);
+  return res.json();
+}
+
+export interface CreateSheetResponse {
+  sheet_id: string;
+  sheet_url: string;
+  sheet_name: string;
+}
+
+export async function createSheet(
+  title: string,
+  headers?: string[],
+): Promise<CreateSheetResponse> {
+  const body: Record<string, unknown> = { title };
+  if (headers) body.headers = headers;
+  const res = await fetch(`${BASE}/sheets/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Create sheet failed: ${res.status}`);
+  return res.json();
+}
+
+export async function reactivateWorkflow(
+  backendWorkflowId: string,
+): Promise<{ workflow_id: string; watch_expiration: string; status: string }> {
+  const res = await fetch(`${BASE}/workflows/${backendWorkflowId}/reactivate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error(`Reactivate failed: ${res.status}`);
   return res.json();
 }
 

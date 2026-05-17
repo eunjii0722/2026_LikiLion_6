@@ -13,13 +13,14 @@ export function Layout() {
   const location = useLocation();
 
   const isHome = location.pathname === "/";
+  const isAutomationDetail = location.pathname.startsWith("/automations/");
   const currentStepIndex = steps.findIndex((s) => s.path === location.pathname);
 
   return (
     <div className="min-h-screen bg-[#F7F8FC] flex flex-col">
       {/* Navbar */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-[1440px] mx-auto px-8 h-16 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <button
             onClick={() => navigate("/")}
@@ -32,13 +33,25 @@ export function Layout() {
               className="text-[18px] font-bold text-gray-900"
               style={{ letterSpacing: "-0.3px" }}
             >
-              FlowTalk
+              WIZE
             </span>
           </button>
 
-          {/* Step progress (only show on non-home pages) */}
-          {!isHome && (
-            <div className="flex items-center gap-2">
+          {/* Step progress (only show on non-home, non-automation-detail pages) */}
+          {!isHome && isAutomationDetail && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <button
+                onClick={() => navigate("/")}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                내 자동화
+              </button>
+              <span className="text-gray-300">/</span>
+              <span className="text-gray-700 font-medium">관리</span>
+            </div>
+          )}
+          {!isHome && !isAutomationDetail && (
+            <div className="hidden sm:flex items-center gap-2">
               {steps.map((step, idx) => {
                 const isActive = step.path === location.pathname;
                 const isDone = currentStepIndex > idx;
