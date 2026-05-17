@@ -12,6 +12,8 @@ import {
   ChevronDown,
   ChevronUp,
   PartyPopper,
+  Link2,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { activateWorkflow, buildRun, getWorkflows } from "../productStore";
@@ -88,6 +90,7 @@ export function TestResultScreen() {
   }).length ?? 0;
   const [isActivating, setIsActivating] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("extraction");
 
   const handleRetry = () => {
@@ -122,8 +125,71 @@ export function TestResultScreen() {
       await minDelay;
     }
     setIsActivating(false);
-    setIsActive(true);
+    setShowLinkModal(true);
   };
+
+  const linkSteps = [
+    { num: 1, text: "구글폼 편집 화면을 열고 상단 “응답(Responses)” 탭 클릭" },
+    { num: 2, text: "초록색 스프레드시트 아이콘(⋮) 클릭" },
+    { num: 3, text: "“기존 스프레드시트 선택” 선택" },
+    { num: 4, text: "WIZE가 방금 만든 시트 선택 후 확인" },
+  ];
+
+  if (showLinkModal) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <motion.div
+          initial={{ scale: 0.92, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", duration: 0.4 }}
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-[480px] p-8"
+        >
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-[#6366F1]/10 flex items-center justify-center">
+                <Link2 className="w-5 h-5 text-[#6366F1]" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-medium mb-0.5">마지막 단계</p>
+                <h2 className="text-[18px] font-bold text-gray-900">구글폼과 시트를 연결해주세요</h2>
+              </div>
+            </div>
+            <button onClick={() => { setShowLinkModal(false); setIsActive(true); }} className="text-gray-300 hover:text-gray-500 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+            폼 응답이 WIZE 시트에 자동으로 쌓이도록 연결해야 해요.<br />아래 순서대로 진행해주세요.
+          </p>
+
+          <div className="space-y-3 mb-8">
+            {linkSteps.map((s) => (
+              <div key={s.num} className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#6366F1] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {s.num}
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">{s.text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-amber-50 rounded-xl px-4 py-3 border border-amber-100 mb-6">
+            <p className="text-xs text-amber-700 leading-relaxed">
+              💡 연결 후 폼을 제출하면 시트에 자동으로 저장되고 Gmail이 발송됩니다.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { setShowLinkModal(false); setIsActive(true); }}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-semibold text-[15px] hover:opacity-90 transition-all shadow-md shadow-indigo-200"
+          >
+            연결했어요 →
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (isActive) {
     return (
