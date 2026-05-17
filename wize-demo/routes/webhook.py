@@ -51,7 +51,16 @@ async def google_webhook(request: Request):
     trigger_config = json.loads(trigger_step["config"])
     linked_sheet_id = trigger_config.get("linked_sheet_id")
 
-    raw_data = google_sheets.get_last_row(linked_sheet_id)
+    try:
+        raw_data = google_sheets.get_last_row(linked_sheet_id)
+    except Exception:
+        # 시트 탭이 아직 없거나 접근 불가 (sync 알림 등) — 무시
+        return {"ok": True}
+
+    if not raw_data:
+        # 응답 행이 없으면 처리 불필요 (sync 알림)
+        return {"ok": True}
+
     data = normalize_row(raw_data)
     # 한국어 변수명 alias 추가 (프론트엔드 템플릿 {이름}, {신청 과정} 지원)
     data["이름"] = data.get("name", "")
@@ -85,6 +94,8 @@ async def google_webhook(request: Request):
 
             elif step["service"] == "gmail":
                 to = fill_template(config.get("to", "{email}"), data)
+                if not to or "@" not in to:
+                    raise ValueError(f"수신자 이메일을 찾을 수 없습니다 (data.email={data.get('email')})")
                 subject = fill_template(config.get("subject", "신청이 완료되었습니다"), data)
                 body_template = config.get("body_template") or config.get("body", "안녕하세요 {name}님,\n신청이 완료되었습니다.")
                 body = fill_template(body_template, data)
