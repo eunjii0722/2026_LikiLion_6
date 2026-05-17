@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Sparkles, ArrowRight, Lightbulb } from "lucide-react";
+import { Sparkles, ArrowRight, Lightbulb, CheckCircle2, Link } from "lucide-react";
 import { parseText } from "../../api";
 import { buildFallbackWorkflow } from "../productStore";
 
@@ -25,6 +25,7 @@ export function InputScreen() {
   const [formUrl, setFormUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const isFormConnected = /https:\/\/docs\.google\.com\/forms\/d\//.test(formUrl);
 
   const handleSuggestion = (text: string) => {
     setInputText(text);
@@ -113,15 +114,33 @@ export function InputScreen() {
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-600 mb-2">
           연결할 구글폼 URL{" "}
-          <span className="text-gray-400 font-normal">(선택사항 — 데모는 미리 연결된 폼 사용)</span>
+          <span className="text-gray-400 font-normal">(선택사항)</span>
         </label>
-        <input
-          type="url"
-          value={formUrl}
-          onChange={(e) => setFormUrl(e.target.value)}
-          placeholder="https://docs.google.com/forms/d/..."
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder-gray-300 outline-none focus:border-[#6366F1] transition-colors bg-white"
-        />
+        {isFormConnected ? (
+          <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-green-200 bg-green-50">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+              <span className="text-sm font-semibold text-green-700">구글폼 연동 완료</span>
+            </div>
+            <button
+              onClick={() => setFormUrl("")}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              변경
+            </button>
+          </div>
+        ) : (
+          <div className="relative">
+            <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+            <input
+              type="url"
+              value={formUrl}
+              onChange={(e) => setFormUrl(e.target.value)}
+              placeholder="https://docs.google.com/forms/d/..."
+              className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder-gray-300 outline-none focus:border-[#6366F1] transition-colors bg-white"
+            />
+          </div>
+        )}
       </div>
 
       {/* Suggestions */}

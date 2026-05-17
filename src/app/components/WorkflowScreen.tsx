@@ -138,7 +138,7 @@ export function WorkflowScreen() {
       1: {
         ...initialStepDetails[1],
         fields: [
-          { label: "입력 소스", value: formUrl, editable: true },
+          { label: "입력 소스", value: "구글폼 연동 완료 ✓" },
           ...initialStepDetails[1].fields.slice(1),
         ],
       },
