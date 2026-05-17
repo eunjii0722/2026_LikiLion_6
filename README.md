@@ -127,7 +127,7 @@ docker build -t wize-mvp .
 docker run -p 8000:8000 --env-file wize-demo/.env wize-mvp
 ```
 
-## 배포 (Railway 권장)
+## 배포 
 
 1. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub Repo**
 2. 루트 디렉터리: `/` (Dockerfile 자동 감지)
