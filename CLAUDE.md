@@ -6,7 +6,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **WIZE Demo Backend** — FastAPI 서버로 한국어 자연어 입력을 Claude API로 파싱해 워크플로우를 생성하고, Google Drive Push Notification으로 구글 폼 응답을 실시간 감지해 구글 시트 추가 + Gmail 발송을 자동 실행하는 데모.
 
-모든 구현은 `wize-demo/` 디렉토리 안에 있으며, **`demo/backend` 브랜치에서만 작업**한다.
+모든 구현은 `wize-demo/` 디렉토리 안에 있다.
+
+## 프로젝트 관리 방법
+
+### 브랜치 전략
+
+- `main` 브랜치에 직접 push 금지 — 반드시 PR로만 머지
+- 작업 브랜치 네이밍:
+  - 기능 추가: `feat/<설명>` (예: `feat/email-preview`)
+  - 버그 수정: `fix/<설명>` (예: `fix/url-validation`)
+  - 문서: `docs/<설명>`
+
+### 작업 흐름
+
+```
+1. main에서 브랜치 생성
+   git checkout main && git pull origin main
+   git checkout -b fix/<설명>
+
+2. 작업 후 커밋
+   git add <파일>
+   git commit -m "fix: 설명"
+
+3. 원격 push
+   git push -u origin fix/<설명>
+
+4. GitHub에서 PR 생성 → main 머지
+   gh pr create --base main --head fix/<설명>
+
+5. 재배포
+   git checkout main && git pull origin main
+   railway up
+```
+
+### 배포
+
+- 플랫폼: Railway (수동 배포)
+- 배포 URL: `https://wize-mvp-production.up.railway.app`
+- 배포 명령: `railway up` (main 최신화 후 실행)
+- 환경변수는 Railway 대시보드에서 관리
 
 ## Commands
 
