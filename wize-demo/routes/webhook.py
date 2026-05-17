@@ -15,7 +15,7 @@ COLUMN_MAP = {
 
 def fill_template(template: str, data: dict) -> str:
     for key, value in data.items():
-        template = template.replace(f"{{{{{key}}}}}", str(value or ""))
+        template = template.replace(f"{{{key}}}", str(value or ""))
     return template
 
 def normalize_row(raw: dict) -> dict:
@@ -53,6 +53,11 @@ async def google_webhook(request: Request):
 
     raw_data = google_sheets.get_last_row(linked_sheet_id)
     data = normalize_row(raw_data)
+    # 한국어 변수명 alias 추가 (프론트엔드 템플릿 {이름}, {신청 과정} 지원)
+    data["이름"] = data.get("name", "")
+    data["이메일"] = data.get("email", "")
+    data["연락처"] = data.get("phone", "")
+    data["신청 과정"] = data.get("course", data.get("신청_과정", ""))
 
     run_id = str(uuid.uuid4())
     with db.get_conn() as conn:
@@ -72,16 +77,17 @@ async def google_webhook(request: Request):
 
         try:
             if step["service"] == "google_sheets":
-                row_template = config.get("row_template") or ["{{name}}", "{{email}}", "{{phone}}", "{{submitted_at}}"]
+                row_template = config.get("row_template") or ["{name}", "{email}", "{phone}", "{submitted_at}"]
                 sheet_id = config.get("sheet_id") or linked_sheet_id
                 sheet_name = config.get("sheet_name") or "Sheet1"
                 row = [fill_template(cell, data) for cell in row_template]
                 google_sheets.append_row(sheet_id, sheet_name, row)
 
             elif step["service"] == "gmail":
-                to = fill_template(config.get("to", "{{email}}"), data)
+                to = fill_template(config.get("to", "{email}"), data)
                 subject = fill_template(config.get("subject", "신청이 완료되었습니다"), data)
-                body = fill_template(config.get("body", "안녕하세요 {{name}}님,\n신청이 완료되었습니다."), data)
+                body_template = config.get("body_template") or config.get("body", "안녕하세요 {name}님,\n신청이 완료되었습니다.")
+                body = fill_template(body_template, data)
                 gmail.send_email(to, subject, body)
 
         except Exception as e:
