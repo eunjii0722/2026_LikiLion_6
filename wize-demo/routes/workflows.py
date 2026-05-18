@@ -70,6 +70,7 @@ def get_workflow(workflow_id: str):
         "workflow": dict(workflow),
         "logs": [dict(l) for l in logs],
         "watch_expiration": trigger_config.get("watch_expiration"),
+        "linked_sheet_id": trigger_config.get("linked_sheet_id"),
     }
 
 
