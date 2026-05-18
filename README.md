@@ -7,9 +7,10 @@
 
 | 브랜치 | 설명 |
 |--------|------|
-| `main` | 통합 기준 브랜치 |
-| `mvp/frontend` | React 프론트엔드 + 전체 MVP 흐름 |
-| `demo/backend` | FastAPI 백엔드 + Google API 연동 |
+| `main` | 통합 기준 브랜치 (PR로만 머지) |
+| `feat/*` | 기능 추가 |
+| `fix/*` | 버그 수정 |
+| `docs/*` | 문서 |
 
 ## 기술 스택
 
@@ -51,7 +52,6 @@
 │   │   ├── components/         # 화면별 컴포넌트
 │   │   │   ├── HomeScreen.tsx
 │   │   │   ├── InputScreen.tsx
-│   │   │   ├── AnalysisScreen.tsx
 │   │   │   ├── WorkflowScreen.tsx
 │   │   │   ├── TestResultScreen.tsx
 │   │   │   └── AutomationDetailScreen.tsx
@@ -127,14 +127,23 @@ docker build -t wize-mvp .
 docker run -p 8000:8000 --env-file wize-demo/.env wize-mvp
 ```
 
-## 배포 
+## 배포
 
-1. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub Repo**
-2. 루트 디렉터리: `/` (Dockerfile 자동 감지)
-3. **Variables** 탭에서 환경변수 입력 (`APP_URL`은 배포 후 Railway가 부여하는 URL로 설정)
-4. 첫 배포 완료 → 생성된 URL 확인
-5. `APP_URL` 값을 해당 URL로 업데이트 → **Redeploy**
-6. 앱에서 새 자동화 생성 → Drive Watch가 새 URL로 등록됨
+Railway CLI로 수동 배포합니다.
+
+```bash
+# 최초 1회 로그인
+railway login
+
+# main 최신화 후 배포
+git checkout main && git pull
+railway up
+```
+
+환경변수는 Railway 대시보드 **Variables** 탭에서 관리합니다.  
+`APP_URL`은 Railway가 부여하는 배포 URL로 설정하세요.
+
+> 현재 배포 URL: `https://wize-mvp-production.up.railway.app`
 
 > ⚠️ Google Drive Watch는 7일 후 만료됩니다. 만료 전 앱에서 자동화를 재활성화하거나 `POST /workflows/{id}/reactivate`를 호출하세요.
 
