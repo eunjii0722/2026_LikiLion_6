@@ -318,6 +318,9 @@ export function WorkflowScreen() {
                   <p className="text-xs text-gray-400 mb-3">
                     응답을 저장할 구글시트가 없으신가요?
                   </p>
+                  <p className="text-xs text-amber-600 mb-3 flex items-center gap-1.5">
+                    <span>⚠️</span> 시트를 생성해야 실제 자동화가 작동해요.
+                  </p>
                   <button
                     onClick={handleCreateSheet}
                     disabled={isCreatingSheet}
