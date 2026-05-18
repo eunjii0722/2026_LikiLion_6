@@ -98,8 +98,9 @@ export function WorkflowScreen() {
   const [submitError, setSubmitError] = useState("");
   const [selectedStep, setSelectedStep] = useState(1);
   const [editingField, setEditingField] = useState<number | null>(null);
-  const [sheetUrl, setSheetUrl] = useState("");
-  const [sheetId, setSheetId] = useState("");
+  const stateSheetId = (location.state?.sheetId as string) ?? "";
+  const [sheetUrl, setSheetUrl] = useState(stateSheetId ? `https://docs.google.com/spreadsheets/d/${stateSheetId}/edit` : "");
+  const [sheetId, setSheetId] = useState(stateSheetId);
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState("");
   const [showTestData, setShowTestData] = useState(false);
