@@ -29,9 +29,12 @@ def normalize_row(raw: dict) -> dict:
 
 @router.post("/webhook/google")
 async def google_webhook(request: Request):
-    # Google이 token 헤더로 workflow_id를 전달
     workflow_id = request.headers.get("X-Goog-Channel-Token")
+    resource_state = request.headers.get("X-Goog-Resource-State", "")
+    logger.info("webhook received workflow_id=%s state=%s", workflow_id, resource_state)
+
     if not workflow_id:
+        logger.warning("webhook: no X-Goog-Channel-Token header")
         return {"ok": True}
 
     with db.get_conn() as conn:
@@ -40,6 +43,7 @@ async def google_webhook(request: Request):
             (workflow_id,),
         ).fetchone()
         if not workflow:
+            logger.warning("webhook: workflow not found or inactive id=%s", workflow_id)
             return {"ok": True}
         steps = conn.execute(
             "SELECT * FROM workflow_step WHERE workflow_id = ? ORDER BY step_order",
