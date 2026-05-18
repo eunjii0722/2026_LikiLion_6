@@ -31,15 +31,11 @@ def create_workflow(req: CreateWorkflowRequest):
     if not linked_sheet_id:
         raise HTTPException(status_code=400, detail="trigger_config.linked_sheet_id is required")
 
-    # Deactivate any existing active workflows watching the same sheet
+    # Deactivate all other active workflows for this user (demo has single user)
     with db.get_conn() as conn:
         conn.execute(
-            """UPDATE workflows SET is_active = 0
-               WHERE id != ? AND is_active = 1 AND id IN (
-                 SELECT workflow_id FROM workflow_step
-                 WHERE step_type = 'trigger' AND config LIKE ?
-               )""",
-            (workflow_id, f'%"linked_sheet_id": "{linked_sheet_id}"%'),
+            "UPDATE workflows SET is_active = 0 WHERE id != ? AND is_active = 1 AND user_id = ?",
+            (workflow_id, user_id),
         )
 
     watch_result = register_watch(linked_sheet_id, workflow_id)
