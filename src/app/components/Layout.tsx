@@ -3,7 +3,6 @@ import { Zap } from "lucide-react";
 
 const steps = [
   { path: "/input", label: "요청 입력" },
-  { path: "/analysis", label: "AI 분석" },
   { path: "/workflow", label: "흐름 확인" },
   { path: "/result", label: "테스트" },
 ];

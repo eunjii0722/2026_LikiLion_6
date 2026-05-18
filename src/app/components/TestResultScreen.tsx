@@ -177,6 +177,13 @@ export function TestResultScreen() {
             </div>
           </div>
 
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-left">
+            <p className="text-xs text-amber-700 leading-relaxed">
+              ⚠️ <strong>Drive Watch는 7일 후 만료됩니다.</strong> 만료되면 폼 응답이 감지되지 않아요.
+              만료 전 홈에서 자동화를 재활성화해주세요.
+            </p>
+          </div>
+
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={() => navigate("/")}
