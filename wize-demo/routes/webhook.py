@@ -100,12 +100,14 @@ async def google_webhook(request: Request):
 
             elif step["service"] == "gmail":
                 to = fill_template(config.get("to", "{email}"), data)
-                if not to or "@" not in to:
+                if not to or not any("@" in addr for addr in to.split(",")):
                     raise ValueError(f"수신자 이메일을 찾을 수 없습니다 (data.email={data.get('email')})")
                 subject = fill_template(config.get("subject", "신청이 완료되었습니다"), data)
                 body_template = config.get("body_template") or config.get("body", "안녕하세요 {name}님,\n신청이 완료되었습니다.")
                 body = fill_template(body_template, data)
-                gmail.send_email(to, subject, body)
+                cc_raw = config.get("cc", "")
+                cc = fill_template(cc_raw, data) if cc_raw else None
+                gmail.send_email(to, subject, body, cc=cc)
 
         except Exception as e:
             step_status = "fail"
