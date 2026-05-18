@@ -486,12 +486,25 @@ export function WorkflowScreen() {
                       </div>
                       <div>
                         <label className="text-xs text-gray-400 block mb-1.5">기존 시트 URL 붙여넣기</label>
-                        <input type="url" placeholder="https://docs.google.com/spreadsheets/d/..."
-                          className="w-full px-3 py-2.5 rounded-xl bg-[#F7F8FC] text-xs text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
-                          onChange={(e) => {
-                            const match = e.target.value.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-                            if (match) { setSheetId(match[1]); setSheetUrl(e.target.value); }
-                          }} />
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={sheetUrl}
+                            onChange={(e) => { setSheetUrl(e.target.value); setSheetError(""); }}
+                            placeholder="https://docs.google.com/spreadsheets/d/..."
+                            className="flex-1 px-3 py-2.5 rounded-xl bg-[#F7F8FC] text-xs text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
+                          />
+                          <button
+                            onClick={() => {
+                              const match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+                              if (match) { setSheetId(match[1]); }
+                              else { setSheetError("올바른 구글시트 URL을 입력해주세요."); }
+                            }}
+                            className="px-3 py-2 rounded-xl bg-[#6366F1] text-white text-xs font-semibold hover:bg-[#5558E3] transition-colors whitespace-nowrap"
+                          >
+                            확인
+                          </button>
+                        </div>
                       </div>
                       {sheetError && <p className="text-xs text-red-500">{sheetError}</p>}
                     </div>
