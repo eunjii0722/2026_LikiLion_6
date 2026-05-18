@@ -318,13 +318,7 @@ export function WorkflowScreen() {
                   </div>
                 </>
               ) : (
-                <div className="bg-white border border-dashed border-[#6366F1]/30 rounded-2xl p-4">
-                  <p className="text-xs text-gray-400 mb-3">
-                    응답을 저장할 구글시트가 없으신가요?
-                  </p>
-                  <p className="text-xs text-amber-600 mb-3 flex items-center gap-1.5">
-                    <span>⚠️</span> 시트를 생성해야 실제 자동화가 작동해요.
-                  </p>
+                <div className="bg-white border border-dashed border-[#6366F1]/30 rounded-2xl p-4 space-y-3">
                   <button
                     onClick={handleCreateSheet}
                     disabled={isCreatingSheet}
@@ -342,8 +336,28 @@ export function WorkflowScreen() {
                       </>
                     )}
                   </button>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-gray-100" />
+                    <span className="text-xs text-gray-400">또는</span>
+                    <div className="flex-1 h-px bg-gray-100" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">기존 구글시트 URL 붙여넣기</p>
+                    <input
+                      type="url"
+                      placeholder="https://docs.google.com/spreadsheets/d/..."
+                      className="w-full px-3 py-2 rounded-xl bg-[#F7F8FC] text-xs text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
+                      onChange={(e) => {
+                        const match = e.target.value.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+                        if (match) {
+                          setSheetId(match[1]);
+                          setSheetUrl(e.target.value);
+                        }
+                      }}
+                    />
+                  </div>
                   {sheetError && (
-                    <p className="text-xs text-red-500 mt-2 text-center">{sheetError}</p>
+                    <p className="text-xs text-red-500 text-center">{sheetError}</p>
                   )}
                 </div>
               )}
