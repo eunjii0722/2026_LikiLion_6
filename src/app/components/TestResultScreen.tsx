@@ -105,6 +105,7 @@ export function TestResultScreen() {
         workflow: retryWorkflow,
         inputText: workflow.originPrompt,
         formUrl: workflow.formUrl,
+        sheetId: workflow.sheetId,
       },
     });
   };

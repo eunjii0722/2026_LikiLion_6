@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useLocation } from "react-router";
 import { createWorkflow, createSheet } from "../../api";
@@ -65,7 +65,7 @@ const initialStepDetails: Record<
   1: {
     title: "시작 조건 설정",
     fields: [
-      { label: "입력 소스", value: "구글폼 수강 신청 폼" },
+      { label: "구글폼 URL", value: "", editable: true },
       { label: "감지 방식", value: "Drive Push 실시간 감지" },
     ],
   },
@@ -94,13 +94,14 @@ export function WorkflowScreen() {
   const location = useLocation();
   const stateWorkflow = location.state?.workflow as WorkflowDraft | undefined;
   const inputText = (location.state?.inputText as string) ?? "";
-  const formUrl = (location.state?.formUrl as string) ?? "";
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isRunningRef = useRef(false);
   const [submitError, setSubmitError] = useState("");
   const [selectedStep, setSelectedStep] = useState(1);
   const [editingField, setEditingField] = useState<number | null>(null);
-  const [sheetUrl, setSheetUrl] = useState("");
-  const [sheetId, setSheetId] = useState("");
+  const stateSheetId = (location.state?.sheetId as string) ?? "";
+  const [sheetUrl, setSheetUrl] = useState(stateSheetId ? `https://docs.google.com/spreadsheets/d/${stateSheetId}/edit` : "");
+  const [sheetId, setSheetId] = useState(stateSheetId);
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState("");
   const [showTestData, setShowTestData] = useState(false);
@@ -158,7 +159,13 @@ export function WorkflowScreen() {
     .replace(/\{phone\}/g, testData.phone);
 
   const handleRun = async () => {
+    if (isRunningRef.current) return;
     if (!stateWorkflow) return;
+    if (!sheetId) {
+      setSubmitError("먼저 구글시트를 생성해주세요.");
+      return;
+    }
+    isRunningRef.current = true;
     setIsSubmitting(true);
     setSubmitError("");
     try {
@@ -184,6 +191,7 @@ export function WorkflowScreen() {
         }
         return action;
       });
+      const formUrl = details[1].fields[0].value;
       const extractedFormId = formUrl ? extractFormId(formUrl) : undefined;
       const workflow = createLocalWorkflow(
         inputText,
@@ -212,6 +220,7 @@ export function WorkflowScreen() {
       setSubmitError("테스트 실행 중 오류가 발생했어요. 다시 시도해주세요.");
     } finally {
       setIsSubmitting(false);
+      isRunningRef.current = false;
     }
   };
 
@@ -274,76 +283,6 @@ export function WorkflowScreen() {
               </div>
             ))}
 
-            {/* 구글시트 생성 카드 */}
-            <div className="mt-4">
-              {sheetUrl ? (
-                <>
-                  <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-green-700">구글시트 생성 완료</p>
-                      <a
-                        href={sheetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-green-600 flex items-center gap-1 hover:underline mt-0.5"
-                      >
-                        시트 열기 <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                  {/* 폼-시트 연결 안내 (시트 생성 직후 표시) */}
-                  <div className="mt-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Link2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                      <p className="text-sm font-semibold text-amber-800">구글폼과 시트를 연결해주세요</p>
-                    </div>
-                    <div className="space-y-1.5 mb-2">
-                      {[
-                        "구글폼 편집 → 응답(Responses) 탭 클릭",
-                        "초록색 스프레드시트 아이콘 클릭",
-                        "기존 스프레드시트 선택 → WIZE 시트 선택",
-                      ].map((s, i) => (
-                        <div key={i} className="flex items-start gap-2 text-xs text-amber-700">
-                          <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                          <span>{s}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-amber-600">연결 완료 후 테스트 실행해주세요.</p>
-                  </div>
-                </>
-              ) : (
-                <div className="bg-white border border-dashed border-[#6366F1]/30 rounded-2xl p-4">
-                  <p className="text-xs text-gray-400 mb-3">
-                    응답을 저장할 구글시트가 없으신가요?
-                  </p>
-                  <p className="text-xs text-amber-600 mb-3 flex items-center gap-1.5">
-                    <span>⚠️</span> 시트를 생성해야 실제 자동화가 작동해요.
-                  </p>
-                  <button
-                    onClick={handleCreateSheet}
-                    disabled={isCreatingSheet}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#6366F1]/5 border border-[#6366F1]/20 text-[#6366F1] text-sm font-semibold hover:bg-[#6366F1]/10 transition-colors disabled:opacity-60"
-                  >
-                    {isCreatingSheet ? (
-                      <>
-                        <div className="w-3.5 h-3.5 border-2 border-[#6366F1]/30 border-t-[#6366F1] rounded-full animate-spin" />
-                        시트 생성 중...
-                      </>
-                    ) : (
-                      <>
-                        <FileSpreadsheet className="w-4 h-4" />
-                        새 구글시트 자동 생성
-                      </>
-                    )}
-                  </button>
-                  {sheetError && (
-                    <p className="text-xs text-red-500 mt-2 text-center">{sheetError}</p>
-                  )}
-                </div>
-              )}
-            </div>
 
             {/* 테스트 데이터 (접기/펼치기) */}
             <div className="mt-4 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
@@ -416,7 +355,7 @@ export function WorkflowScreen() {
               <h3 className="text-sm font-semibold text-gray-700 mb-5">{detail.title}</h3>
 
               <div className="space-y-4">
-                {detail.fields.map((field, idx) => (
+                {selectedStep !== 1 && selectedStep !== 2 && detail.fields.map((field, idx) => (
                   <div key={idx} className="group">
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
@@ -470,6 +409,113 @@ export function WorkflowScreen() {
                   </div>
                 ))}
               </div>
+
+              {/* Step 1: 구글폼 URL 입력 */}
+              {selectedStep === 1 && (
+                <div className="mt-5 space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1.5">구글폼 URL</label>
+                    <input
+                      type="url"
+                      value={details[1].fields[0].value}
+                      onChange={(e) => updateField(1, 0, e.target.value)}
+                      placeholder="https://docs.google.com/forms/d/..."
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#F7F8FC] text-sm text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
+                    />
+                    {details[1].fields[0].value && (
+                      <a href={details[1].fields[0].value} target="_blank" rel="noopener noreferrer"
+                        className="mt-1.5 flex items-center gap-1 text-xs text-[#6366F1] hover:underline">
+                        <ExternalLink className="w-3 h-3" /> 폼 열기
+                      </a>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1.5">감지 방식</label>
+                    <div className="bg-[#F7F8FC] rounded-xl px-4 py-3 text-sm text-gray-500">Drive Push 실시간 감지</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: 시트 설정 */}
+              {selectedStep === 2 && (
+                <div className="mt-5 space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-1.5">시트 이름</label>
+                    <input
+                      type="text"
+                      value={details[2].fields[0].value}
+                      onChange={(e) => updateField(2, 0, e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#F7F8FC] text-sm text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
+                    />
+                  </div>
+                  <div className="h-px bg-gray-100" />
+                  {sheetId ? (
+                    <div className="space-y-3">
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-3">
+                        <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-green-700">시트 연결됨</p>
+                          <a href={sheetUrl} target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-green-600 flex items-center gap-1 hover:underline mt-0.5">
+                            시트 열기 <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      </div>
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Link2 className="w-3.5 h-3.5 text-amber-600" />
+                          <p className="text-xs font-semibold text-amber-800">구글폼과 이 시트를 연결해주세요</p>
+                        </div>
+                        {["구글폼 → 응답 탭 클릭", "스프레드시트 아이콘 → 기존 시트 선택", "위 WIZE 시트 선택 후 확인"].map((s, i) => (
+                          <div key={i} className="flex items-start gap-2 text-xs text-amber-700 mb-1">
+                            <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                            <span>{s}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <button onClick={handleCreateSheet} disabled={isCreatingSheet}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#6366F1]/5 border border-[#6366F1]/20 text-[#6366F1] text-sm font-semibold hover:bg-[#6366F1]/10 transition-colors disabled:opacity-60">
+                        {isCreatingSheet ? (
+                          <><div className="w-3.5 h-3.5 border-2 border-[#6366F1]/30 border-t-[#6366F1] rounded-full animate-spin" />시트 생성 중...</>
+                        ) : (
+                          <><FileSpreadsheet className="w-4 h-4" />새 구글시트 자동 생성</>
+                        )}
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-px bg-gray-100" />
+                        <span className="text-xs text-gray-400">또는</span>
+                        <div className="flex-1 h-px bg-gray-100" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1.5">기존 시트 URL 붙여넣기</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={sheetUrl}
+                            onChange={(e) => { setSheetUrl(e.target.value); setSheetError(""); }}
+                            placeholder="https://docs.google.com/spreadsheets/d/..."
+                            className="flex-1 px-3 py-2.5 rounded-xl bg-[#F7F8FC] text-xs text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
+                          />
+                          <button
+                            onClick={() => {
+                              const match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+                              if (match) { setSheetId(match[1]); }
+                              else { setSheetError("올바른 구글시트 URL을 입력해주세요."); }
+                            }}
+                            className="px-3 py-2 rounded-xl bg-[#6366F1] text-white text-xs font-semibold hover:bg-[#5558E3] transition-colors whitespace-nowrap"
+                          >
+                            확인
+                          </button>
+                        </div>
+                      </div>
+                      {sheetError && <p className="text-xs text-red-500">{sheetError}</p>}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Email preview for step 3 */}
               {selectedStep === 3 && (

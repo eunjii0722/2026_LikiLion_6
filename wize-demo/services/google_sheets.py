@@ -61,9 +61,19 @@ def append_row(sheet_id: str, sheet_name: str, row: list):
         body={"values": [row]},
     ).execute()
 
-def get_last_row(sheet_id: str, sheet_name: str = "Form Responses 1") -> dict:
+def get_last_row(sheet_id: str, sheet_name: str | None = None) -> dict:
     creds = get_credentials()
     service = build("sheets", "v4", credentials=creds)
+
+    if sheet_name is None:
+        meta = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        candidates = ["양식 응답 1", "Form Responses 1"]
+        all_titles = [s["properties"]["title"] for s in meta.get("sheets", [])]
+        sheet_name = next(
+            (t for t in all_titles if any(c.lower() in t.lower() for c in ["양식 응답", "form responses"])),
+            all_titles[0] if all_titles else "Form Responses 1",
+        )
+
     result = service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
         range=f"{sheet_name}!A1:Z",

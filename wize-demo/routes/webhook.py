@@ -29,9 +29,16 @@ def normalize_row(raw: dict) -> dict:
 
 @router.post("/webhook/google")
 async def google_webhook(request: Request):
-    # Google이 token 헤더로 workflow_id를 전달
     workflow_id = request.headers.get("X-Goog-Channel-Token")
+    resource_state = request.headers.get("X-Goog-Resource-State", "")
+    logger.info("webhook received workflow_id=%s state=%s", workflow_id, resource_state)
+
     if not workflow_id:
+        logger.warning("webhook: no X-Goog-Channel-Token header")
+        return {"ok": True}
+
+    if resource_state != "change":
+        logger.info("webhook: skipping non-change state=%s", resource_state)
         return {"ok": True}
 
     with db.get_conn() as conn:
@@ -40,6 +47,7 @@ async def google_webhook(request: Request):
             (workflow_id,),
         ).fetchone()
         if not workflow:
+            logger.warning("webhook: workflow not found or inactive id=%s", workflow_id)
             return {"ok": True}
         steps = conn.execute(
             "SELECT * FROM workflow_step WHERE workflow_id = ? ORDER BY step_order",
@@ -48,6 +56,16 @@ async def google_webhook(request: Request):
 
     trigger_step = next((s for s in steps if s["step_type"] == "trigger"), None)
     if not trigger_step:
+        return {"ok": True}
+
+    # Dedup: skip if a run already started within the last 30 seconds
+    with db.get_conn() as conn:
+        recent = conn.execute(
+            "SELECT id FROM execution_runs WHERE workflow_id = ? AND started_at > datetime('now', '-30 seconds')",
+            (workflow_id,),
+        ).fetchone()
+    if recent:
+        logger.info("webhook: duplicate notification within 30s, skipping workflow_id=%s", workflow_id)
         return {"ok": True}
 
     trigger_config = json.loads(trigger_step["config"])
@@ -96,12 +114,14 @@ async def google_webhook(request: Request):
 
             elif step["service"] == "gmail":
                 to = fill_template(config.get("to", "{email}"), data)
-                if not to or "@" not in to:
+                if not to or not any("@" in addr for addr in to.split(",")):
                     raise ValueError(f"수신자 이메일을 찾을 수 없습니다 (data.email={data.get('email')})")
                 subject = fill_template(config.get("subject", "신청이 완료되었습니다"), data)
                 body_template = config.get("body_template") or config.get("body", "안녕하세요 {name}님,\n신청이 완료되었습니다.")
                 body = fill_template(body_template, data)
-                gmail.send_email(to, subject, body)
+                cc_raw = config.get("cc", "")
+                cc = fill_template(cc_raw, data) if cc_raw else None
+                gmail.send_email(to, subject, body, cc=cc)
 
         except Exception as e:
             step_status = "fail"

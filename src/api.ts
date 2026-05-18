@@ -42,8 +42,8 @@ export async function parseText(text: string): Promise<ParseResponse> {
   return res.json();
 }
 
-const DEMO_FORM_ID = "1vH6PA6la4x6p4QCINv3HGyyXzPVr9gHzO6BNl8xXw-M";
-const DEMO_SHEET_ID = "1bMAyj4CqFJbBn3IFQMlTV5y227pEQl9S_GPypxftvAQ";
+const DEMO_FORM_ID = "";
+const DEMO_SHEET_ID = "";
 
 export async function createWorkflow(
   originPrompt: string,
