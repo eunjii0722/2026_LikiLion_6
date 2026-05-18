@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useLocation } from "react-router";
 import { createWorkflow, createSheet } from "../../api";
@@ -95,6 +95,7 @@ export function WorkflowScreen() {
   const stateWorkflow = location.state?.workflow as WorkflowDraft | undefined;
   const inputText = (location.state?.inputText as string) ?? "";
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isRunningRef = useRef(false);
   const [submitError, setSubmitError] = useState("");
   const [selectedStep, setSelectedStep] = useState(1);
   const [editingField, setEditingField] = useState<number | null>(null);
@@ -158,11 +159,13 @@ export function WorkflowScreen() {
     .replace(/\{phone\}/g, testData.phone);
 
   const handleRun = async () => {
+    if (isRunningRef.current) return;
     if (!stateWorkflow) return;
     if (!sheetId) {
       setSubmitError("먼저 구글시트를 생성해주세요.");
       return;
     }
+    isRunningRef.current = true;
     setIsSubmitting(true);
     setSubmitError("");
     try {
@@ -217,6 +220,7 @@ export function WorkflowScreen() {
       setSubmitError("테스트 실행 중 오류가 발생했어요. 다시 시도해주세요.");
     } finally {
       setIsSubmitting(false);
+      isRunningRef.current = false;
     }
   };
 
