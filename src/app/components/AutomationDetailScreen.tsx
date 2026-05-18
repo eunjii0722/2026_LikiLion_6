@@ -75,12 +75,13 @@ export function AutomationDetailScreen() {
     (gmailAction?.config?.body_template as string) ??
       "{이름}님, {신청 과정} 수강 신청이 정상 접수되었습니다."
   );
+  const resolvedSheetId =
+    (sheetAction?.config?.sheet_id as string) || workflow?.sheetId || "";
   const [createdSheetUrl, setCreatedSheetUrl] = useState(
-    (sheetAction?.config?.sheet_url as string) ?? ""
+    (sheetAction?.config?.sheet_url as string) ||
+    (resolvedSheetId ? `https://docs.google.com/spreadsheets/d/${resolvedSheetId}/edit` : "")
   );
-  const [createdSheetId, setCreatedSheetId] = useState(
-    (sheetAction?.config?.sheet_id as string) ?? ""
-  );
+  const [createdSheetId, setCreatedSheetId] = useState(resolvedSheetId);
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
