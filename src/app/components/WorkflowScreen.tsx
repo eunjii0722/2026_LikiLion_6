@@ -159,6 +159,10 @@ export function WorkflowScreen() {
 
   const handleRun = async () => {
     if (!stateWorkflow) return;
+    if (!sheetId) {
+      setSubmitError("먼저 구글시트를 생성해주세요.");
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError("");
     try {
