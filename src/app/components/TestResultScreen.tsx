@@ -13,7 +13,6 @@ import {
   ChevronUp,
   PartyPopper,
   Link2,
-  X,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { activateWorkflow, buildRun, getWorkflows } from "../productStore";
@@ -90,7 +89,6 @@ export function TestResultScreen() {
   }).length ?? 0;
   const [isActivating, setIsActivating] = useState(false);
   const [isActive, setIsActive] = useState(false);
-  const [showLinkModal, setShowLinkModal] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("extraction");
 
   const handleRetry = () => {
@@ -125,71 +123,8 @@ export function TestResultScreen() {
       await minDelay;
     }
     setIsActivating(false);
-    setShowLinkModal(true);
+    setIsActive(true);
   };
-
-  const linkSteps = [
-    { num: 1, text: "구글폼 편집 화면을 열고 상단 “응답(Responses)” 탭 클릭" },
-    { num: 2, text: "초록색 스프레드시트 아이콘(⋮) 클릭" },
-    { num: 3, text: "“기존 스프레드시트 선택” 선택" },
-    { num: 4, text: "WIZE가 방금 만든 시트 선택 후 확인" },
-  ];
-
-  if (showLinkModal) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-        <motion.div
-          initial={{ scale: 0.92, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", duration: 0.4 }}
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-[480px] p-8"
-        >
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-[#6366F1]/10 flex items-center justify-center">
-                <Link2 className="w-5 h-5 text-[#6366F1]" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 font-medium mb-0.5">마지막 단계</p>
-                <h2 className="text-[18px] font-bold text-gray-900">구글폼과 시트를 연결해주세요</h2>
-              </div>
-            </div>
-            <button onClick={() => { setShowLinkModal(false); setIsActive(true); }} className="text-gray-300 hover:text-gray-500 transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-            폼 응답이 WIZE 시트에 자동으로 쌓이도록 연결해야 해요.<br />아래 순서대로 진행해주세요.
-          </p>
-
-          <div className="space-y-3 mb-8">
-            {linkSteps.map((s) => (
-              <div key={s.num} className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#6366F1] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                  {s.num}
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">{s.text}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-amber-50 rounded-xl px-4 py-3 border border-amber-100 mb-6">
-            <p className="text-xs text-amber-700 leading-relaxed">
-              💡 연결 후 폼을 제출하면 시트에 자동으로 저장되고 Gmail이 발송됩니다.
-            </p>
-          </div>
-
-          <button
-            onClick={() => { setShowLinkModal(false); setIsActive(true); }}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-semibold text-[15px] hover:opacity-90 transition-all shadow-md shadow-indigo-200"
-          >
-            연결했어요 →
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
 
   if (isActive) {
     return (
@@ -484,6 +419,30 @@ export function TestResultScreen() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* 구글폼-시트 연결 안내 (자동화 켜기 전) */}
+      <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Link2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          <p className="text-sm font-semibold text-amber-800">자동화 켜기 전에 확인해주세요</p>
+        </div>
+        <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+          구글폼과 WIZE 시트를 연결해야 폼 응답이 자동으로 처리돼요.
+        </p>
+        <div className="space-y-1.5">
+          {[
+            "구글폼 편집 → 상단 응답(Responses) 탭 클릭",
+            "초록색 스프레드시트 아이콘 클릭",
+            "기존 스프레드시트 선택 → WIZE가 만든 시트 선택",
+            "확인 클릭 후 아래 버튼 누르기",
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-2 text-xs text-amber-700">
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+              <span>{step}</span>
+            </div>
+          ))}
         </div>
       </div>
 

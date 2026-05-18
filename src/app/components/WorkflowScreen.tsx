@@ -6,7 +6,6 @@ import type { WorkflowDraft } from "../../api";
 import { addTestRun, createLocalWorkflow, updateWorkflowConfig, buildFallbackWorkflow, type TestData } from "../productStore";
 import {
   FileText,
-  Brain,
   FileSpreadsheet,
   Mail,
   Settings,
@@ -15,6 +14,9 @@ import {
   ExternalLink,
   CheckCircle,
   User,
+  Link2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 const workflowSteps = [
@@ -32,18 +34,6 @@ const workflowSteps = [
   },
   {
     id: 2,
-    icon: Brain,
-    iconBg: "bg-blue-50",
-    iconColor: "text-blue-500",
-    borderColor: "border-blue-200",
-    activeBorder: "border-blue-500",
-    title: "AI가 응답 필드 정리",
-    description: "이름, 이메일, 연락처, 신청 과정을 표준 필드로 정리해요",
-    badge: "AI 처리",
-    badgeBg: "bg-blue-100 text-blue-700",
-  },
-  {
-    id: 3,
     icon: FileSpreadsheet,
     iconBg: "bg-green-50",
     iconColor: "text-green-600",
@@ -55,7 +45,7 @@ const workflowSteps = [
     badgeBg: "bg-green-100 text-green-700",
   },
   {
-    id: 4,
+    id: 3,
     icon: Mail,
     iconBg: "bg-purple-50",
     iconColor: "text-purple-600",
@@ -76,31 +66,20 @@ const initialStepDetails: Record<
     title: "시작 조건 설정",
     fields: [
       { label: "입력 소스", value: "구글폼 수강 신청 폼" },
-      { label: "감지 방식", value: "새 응답 제출 감지" },
-      { label: "필터 조건", value: "모든 제출 응답", editable: true },
+      { label: "감지 방식", value: "Drive Push 실시간 감지" },
     ],
   },
   2: {
-    title: "AI 정보 추출 설정",
-    fields: [
-      { label: "추출할 정보", value: "이름, 이메일, 연락처, 신청 과정, 제출일", editable: true },
-      { label: "실패 시 처리", value: "관리자에게 알림", editable: true },
-    ],
-  },
-  3: {
     title: "구글시트 저장 설정",
     fields: [
       { label: "시트 이름", value: "수강신청 응답", editable: true },
-      { label: "저장 순서", value: "제출일 / 이름 / 이메일 / 연락처 / 신청 과정", editable: true },
-      { label: "중복 처리", value: "새 행으로 추가" },
     ],
   },
-  4: {
+  3: {
     title: "Gmail 발송 설정",
     fields: [
       { label: "메일 제목", value: "[WIZE] 수강 신청이 접수되었습니다", editable: true },
       { label: "메일 내용", value: "{이름}님, {신청 과정} 수강 신청이 정상 접수되었습니다.", editable: true },
-      { label: "발송 방식", value: "응답 저장 후 자동 발송" },
     ],
   },
 };
@@ -124,6 +103,7 @@ export function WorkflowScreen() {
   const [sheetId, setSheetId] = useState("");
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState("");
+  const [showTestData, setShowTestData] = useState(false);
   const [testData, setTestData] = useState<TestData>({
     name: "이은지",
     email: "eunji@example.com",
@@ -131,19 +111,7 @@ export function WorkflowScreen() {
     item: "파이썬 기초반",
   });
 
-  const [details, setDetails] = useState(() => {
-    if (!formUrl) return initialStepDetails;
-    return {
-      ...initialStepDetails,
-      1: {
-        ...initialStepDetails[1],
-        fields: [
-          { label: "입력 소스", value: "구글폼 연동 완료 ✓" },
-          ...initialStepDetails[1].fields.slice(1),
-        ],
-      },
-    };
-  });
+  const [details, setDetails] = useState(initialStepDetails);
   const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
@@ -168,10 +136,10 @@ export function WorkflowScreen() {
     setIsCreatingSheet(true);
     setSheetError("");
     try {
-      const result = await createSheet(details[3].fields[0].value);
+      const result = await createSheet(details[2].fields[0].value);
       setSheetUrl(result.sheet_url);
       setSheetId(result.sheet_id);
-      updateField(3, 0, result.sheet_name);
+      updateField(2, 0, result.sheet_name);
     } catch {
       setSheetError("시트 생성 실패. 백엔드가 실행 중인지 확인해주세요.");
     } finally {
@@ -179,7 +147,7 @@ export function WorkflowScreen() {
     }
   };
 
-  const emailBodyPreview = details[4].fields[1].value
+  const emailBodyPreview = details[3].fields[1].value
     .replace(/\{이름\}/g, testData.name)
     .replace(/\{name\}/g, testData.name)
     .replace(/\{신청 과정\}/g, testData.item)
@@ -201,7 +169,7 @@ export function WorkflowScreen() {
         if (action.service === "google_sheets") {
           return {
             ...action,
-            config: { ...action.config, sheet_name: details[3].fields[0].value },
+            config: { ...action.config, sheet_name: details[2].fields[0].value },
           };
         }
         if (action.service === "gmail") {
@@ -209,8 +177,8 @@ export function WorkflowScreen() {
             ...action,
             config: {
               ...action.config,
-              subject: details[4].fields[0].value,
-              body_template: details[4].fields[1].value,
+              subject: details[3].fields[0].value,
+              body_template: details[3].fields[1].value,
             },
           };
         }
@@ -309,20 +277,42 @@ export function WorkflowScreen() {
             {/* 구글시트 생성 카드 */}
             <div className="mt-4">
               {sheetUrl ? (
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-green-700">구글시트 생성 완료</p>
-                    <a
-                      href={sheetUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-green-600 flex items-center gap-1 hover:underline mt-0.5"
-                    >
-                      시트 열기 <ExternalLink className="w-3 h-3" />
-                    </a>
+                <>
+                  <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-green-700">구글시트 생성 완료</p>
+                      <a
+                        href={sheetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-green-600 flex items-center gap-1 hover:underline mt-0.5"
+                      >
+                        시트 열기 <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </div>
-                </div>
+                  {/* 폼-시트 연결 안내 (시트 생성 직후 표시) */}
+                  <div className="mt-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Link2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                      <p className="text-sm font-semibold text-amber-800">구글폼과 시트를 연결해주세요</p>
+                    </div>
+                    <div className="space-y-1.5 mb-2">
+                      {[
+                        "구글폼 편집 → 응답(Responses) 탭 클릭",
+                        "초록색 스프레드시트 아이콘 클릭",
+                        "기존 스프레드시트 선택 → WIZE 시트 선택",
+                      ].map((s, i) => (
+                        <div key={i} className="flex items-start gap-2 text-xs text-amber-700">
+                          <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                          <span>{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-amber-600">연결 완료 후 테스트 실행해주세요.</p>
+                  </div>
+                </>
               ) : (
                 <div className="bg-white border border-dashed border-[#6366F1]/30 rounded-2xl p-4">
                   <p className="text-xs text-gray-400 mb-3">
@@ -352,29 +342,44 @@ export function WorkflowScreen() {
               )}
             </div>
 
-            {/* 테스트 데이터 입력 */}
-            <div className="mt-4 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <User className="w-4 h-4 text-gray-400" />
-                <p className="text-sm font-semibold text-gray-700">테스트 데이터</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: "이름", key: "name" as const },
-                  { label: "이메일", key: "email" as const },
-                  { label: "연락처", key: "phone" as const },
-                  { label: "신청 과정", key: "item" as const },
-                ].map(({ label, key }) => (
-                  <div key={key}>
-                    <label className="block text-xs text-gray-400 mb-1">{label}</label>
-                    <input
-                      value={testData[key]}
-                      onChange={(e) => setTestData((prev) => ({ ...prev, [key]: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-[#F7F8FC] text-xs text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
-                    />
+            {/* 테스트 데이터 (접기/펼치기) */}
+            <div className="mt-4 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => setShowTestData(!showTestData)}
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <p className="text-sm font-semibold text-gray-700">테스트 데이터</p>
+                  <span className="text-xs text-gray-400">(기본값 사용 중)</span>
+                </div>
+                {showTestData ? (
+                  <ChevronUp className="w-4 h-4 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                )}
+              </button>
+              {showTestData && (
+                <div className="px-4 pb-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "이름", key: "name" as const },
+                      { label: "이메일", key: "email" as const },
+                      { label: "연락처", key: "phone" as const },
+                      { label: "신청 과정", key: "item" as const },
+                    ].map(({ label, key }) => (
+                      <div key={key}>
+                        <label className="block text-xs text-gray-400 mb-1">{label}</label>
+                        <input
+                          value={testData[key]}
+                          onChange={(e) => setTestData((prev) => ({ ...prev, [key]: e.target.value }))}
+                          className="w-full px-3 py-2 rounded-xl bg-[#F7F8FC] text-xs text-gray-700 outline-none border border-transparent focus:border-[#6366F1] transition-colors"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -463,18 +468,8 @@ export function WorkflowScreen() {
                 ))}
               </div>
 
-              {/* formUrl hint for step 1 */}
-              {selectedStep === 1 && !formUrl && (
-                <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-2">
-                  <FileText className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700 leading-relaxed">
-                    구글폼 URL을 연결하지 않으면 데모 폼이 사용됩니다. 실제 폼을 연결하려면 첫 단계 화면에서 URL을 입력해주세요.
-                  </p>
-                </div>
-              )}
-
-              {/* Email preview for step 4 */}
-              {selectedStep === 4 && (
+              {/* Email preview for step 3 */}
+              {selectedStep === 3 && (
                 <div className="mt-5 bg-[#FDF4FF] rounded-xl p-4 border border-purple-100">
                   <p className="text-xs font-semibold text-purple-600 mb-3">테스트 데이터 기준 미리보기</p>
                   <div className="flex items-start gap-2 flex-row-reverse">
