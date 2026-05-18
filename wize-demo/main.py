@@ -14,6 +14,12 @@ app.include_router(workflows.router)
 app.include_router(webhook.router)
 app.include_router(sheets.router)
 
+@app.post("/debug/deactivate/{workflow_id}")
+def debug_deactivate(workflow_id: str):
+    with db.get_conn() as conn:
+        conn.execute("UPDATE workflows SET is_active = 0 WHERE id = ?", (workflow_id,))
+    return {"ok": True, "workflow_id": workflow_id}
+
 @app.get("/debug/db")
 def debug_db():
     with db.get_conn() as conn:

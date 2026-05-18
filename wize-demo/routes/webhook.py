@@ -37,6 +37,10 @@ async def google_webhook(request: Request):
         logger.warning("webhook: no X-Goog-Channel-Token header")
         return {"ok": True}
 
+    if resource_state != "change":
+        logger.info("webhook: skipping non-change state=%s", resource_state)
+        return {"ok": True}
+
     with db.get_conn() as conn:
         workflow = conn.execute(
             "SELECT * FROM workflows WHERE id = ? AND is_active = 1",
@@ -52,6 +56,16 @@ async def google_webhook(request: Request):
 
     trigger_step = next((s for s in steps if s["step_type"] == "trigger"), None)
     if not trigger_step:
+        return {"ok": True}
+
+    # Dedup: skip if a run already started within the last 30 seconds
+    with db.get_conn() as conn:
+        recent = conn.execute(
+            "SELECT id FROM execution_runs WHERE workflow_id = ? AND started_at > datetime('now', '-30 seconds')",
+            (workflow_id,),
+        ).fetchone()
+    if recent:
+        logger.info("webhook: duplicate notification within 30s, skipping workflow_id=%s", workflow_id)
         return {"ok": True}
 
     trigger_config = json.loads(trigger_step["config"])
