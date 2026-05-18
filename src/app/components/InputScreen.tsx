@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Sparkles, ArrowRight, Lightbulb, CheckCircle2, Link } from "lucide-react";
+import { Sparkles, ArrowRight, Lightbulb } from "lucide-react";
 import { parseText } from "../../api";
 import { buildFallbackWorkflow } from "../productStore";
 
@@ -22,10 +22,8 @@ const suggestions = [
 export function InputScreen() {
   const navigate = useNavigate();
   const [inputText, setInputText] = useState("");
-  const [formUrl, setFormUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const isFormConnected = /https:\/\/docs\.google\.com\/forms\/d\//.test(formUrl);
 
   const handleSuggestion = (text: string) => {
     setInputText(text);
@@ -33,17 +31,13 @@ export function InputScreen() {
 
   const handleSubmit = async () => {
     if (!inputText.trim()) return;
-    if (formUrl && !/https:\/\/docs\.google\.com\/forms\/d\//.test(formUrl)) {
-      setError("구글폼 URL 형식이 올바르지 않아요. (예: https://docs.google.com/forms/d/...)");
-      return;
-    }
     setIsLoading(true);
     try {
       const { workflow } = await parseText(inputText);
-      navigate("/analysis", { state: { workflow, inputText, formUrl } });
+      navigate("/workflow", { state: { workflow, inputText } });
     } catch {
       const workflow = buildFallbackWorkflow(inputText);
-      navigate("/analysis", { state: { workflow, inputText, formUrl, localMode: true } });
+      navigate("/workflow", { state: { workflow, inputText, localMode: true } });
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +68,7 @@ export function InputScreen() {
       )}
 
       {/* Input Area */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-8">
         <textarea
           value={inputText}
           onChange={(e) => { setInputText(e.target.value); setError(""); }}
@@ -108,39 +102,6 @@ export function InputScreen() {
             )}
           </button>
         </div>
-      </div>
-
-      {/* Google Form URL */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-600 mb-2">
-          연결할 구글폼 URL{" "}
-          <span className="text-gray-400 font-normal">(선택사항)</span>
-        </label>
-        {isFormConnected ? (
-          <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-green-200 bg-green-50">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-              <span className="text-sm font-semibold text-green-700">구글폼 연동 완료</span>
-            </div>
-            <button
-              onClick={() => setFormUrl("")}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              변경
-            </button>
-          </div>
-        ) : (
-          <div className="relative">
-            <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-            <input
-              type="url"
-              value={formUrl}
-              onChange={(e) => setFormUrl(e.target.value)}
-              placeholder="https://docs.google.com/forms/d/..."
-              className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-700 placeholder-gray-300 outline-none focus:border-[#6366F1] transition-colors bg-white"
-            />
-          </div>
-        )}
       </div>
 
       {/* Suggestions */}
@@ -185,6 +146,17 @@ export function InputScreen() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Next step hint */}
+      <div className="mt-8 flex items-center justify-center gap-2 text-xs text-gray-400">
+        <span>입력 후</span>
+        <ArrowRight className="w-3 h-3" />
+        <span>AI 분석</span>
+        <ArrowRight className="w-3 h-3" />
+        <span>자동화 설정</span>
+        <ArrowRight className="w-3 h-3" />
+        <span>테스트 실행</span>
       </div>
     </div>
   );
