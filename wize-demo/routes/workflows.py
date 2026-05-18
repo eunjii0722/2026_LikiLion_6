@@ -111,3 +111,12 @@ def get_logs(workflow_id: str):
             (workflow_id,),
         ).fetchall()
     return {"logs": [dict(r) for r in runs]}
+
+@router.get("/workflows/{workflow_id}/step-logs")
+def get_step_logs(workflow_id: str):
+    with db.get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM step_logs WHERE workflow_id = ? ORDER BY executed_at DESC LIMIT 20",
+            (workflow_id,),
+        ).fetchall()
+    return {"step_logs": [dict(r) for r in rows]}
