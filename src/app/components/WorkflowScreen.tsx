@@ -65,7 +65,7 @@ const initialStepDetails: Record<
   1: {
     title: "시작 조건 설정",
     fields: [
-      { label: "입력 소스", value: "구글폼 수강 신청 폼" },
+      { label: "구글폼 URL", value: "", editable: true },
       { label: "감지 방식", value: "Drive Push 실시간 감지" },
     ],
   },
@@ -102,7 +102,6 @@ export function WorkflowScreen() {
   const [sheetId, setSheetId] = useState("");
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState("");
-  const [formUrl, setFormUrl] = useState((location.state?.formUrl as string) ?? "");
   const [showTestData, setShowTestData] = useState(false);
   const [testData, setTestData] = useState<TestData>({
     name: "이은지",
@@ -188,6 +187,7 @@ export function WorkflowScreen() {
         }
         return action;
       });
+      const formUrl = details[1].fields[0].value;
       const extractedFormId = formUrl ? extractFormId(formUrl) : undefined;
       const workflow = createLocalWorkflow(
         inputText,
@@ -314,27 +314,7 @@ export function WorkflowScreen() {
                         </div>
                       ))}
                     </div>
-                    <div>
-                      <label className="text-xs font-semibold text-amber-800 mb-1 block">내 구글폼 URL 붙여넣기</label>
-                      <input
-                        type="url"
-                        value={formUrl}
-                        onChange={(e) => setFormUrl(e.target.value)}
-                        placeholder="https://docs.google.com/forms/d/..."
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-amber-200 text-xs text-gray-700 outline-none focus:border-amber-400 transition-colors"
-                      />
-                      {formUrl && (
-                        <a
-                          href={formUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1.5 flex items-center gap-1 text-xs text-amber-600 hover:underline"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          폼 열기
-                        </a>
-                      )}
-                    </div>
+                    <p className="text-xs text-amber-600">연결 완료 후 테스트 실행해주세요.</p>
                   </div>
                 </>
               ) : (
