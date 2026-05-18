@@ -94,7 +94,6 @@ export function WorkflowScreen() {
   const location = useLocation();
   const stateWorkflow = location.state?.workflow as WorkflowDraft | undefined;
   const inputText = (location.state?.inputText as string) ?? "";
-  const formUrl = (location.state?.formUrl as string) ?? "";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [selectedStep, setSelectedStep] = useState(1);
@@ -103,6 +102,7 @@ export function WorkflowScreen() {
   const [sheetId, setSheetId] = useState("");
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [sheetError, setSheetError] = useState("");
+  const [formUrl, setFormUrl] = useState((location.state?.formUrl as string) ?? "");
   const [showTestData, setShowTestData] = useState(false);
   const [testData, setTestData] = useState<TestData>({
     name: "이은지",
@@ -302,7 +302,7 @@ export function WorkflowScreen() {
                       <Link2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
                       <p className="text-sm font-semibold text-amber-800">구글폼과 시트를 연결해주세요</p>
                     </div>
-                    <div className="space-y-1.5 mb-2">
+                    <div className="space-y-1.5 mb-3">
                       {[
                         "구글폼 편집 → 응답(Responses) 탭 클릭",
                         "초록색 스프레드시트 아이콘 클릭",
@@ -314,7 +314,27 @@ export function WorkflowScreen() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-amber-600">연결 완료 후 테스트 실행해주세요.</p>
+                    <div>
+                      <label className="text-xs font-semibold text-amber-800 mb-1 block">내 구글폼 URL 붙여넣기</label>
+                      <input
+                        type="url"
+                        value={formUrl}
+                        onChange={(e) => setFormUrl(e.target.value)}
+                        placeholder="https://docs.google.com/forms/d/..."
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-amber-200 text-xs text-gray-700 outline-none focus:border-amber-400 transition-colors"
+                      />
+                      {formUrl && (
+                        <a
+                          href={formUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1.5 flex items-center gap-1 text-xs text-amber-600 hover:underline"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          폼 열기
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (
