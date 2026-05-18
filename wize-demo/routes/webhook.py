@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Request
-import json, uuid
+import json, uuid, logging
 from datetime import datetime
 import db
 from services import google_sheets, gmail
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -53,12 +55,12 @@ async def google_webhook(request: Request):
 
     try:
         raw_data = google_sheets.get_last_row(linked_sheet_id)
-    except Exception:
-        # 시트 탭이 아직 없거나 접근 불가 (sync 알림 등) — 무시
+    except Exception as e:
+        logger.warning("get_last_row failed sheet=%s err=%s", linked_sheet_id, e)
         return {"ok": True}
 
     if not raw_data:
-        # 응답 행이 없으면 처리 불필요 (sync 알림)
+        logger.info("get_last_row empty sheet=%s (sync notification)", linked_sheet_id)
         return {"ok": True}
 
     data = normalize_row(raw_data)
